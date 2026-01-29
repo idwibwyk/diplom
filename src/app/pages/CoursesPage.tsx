@@ -1,0 +1,247 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { Search, Clock, Users, ArrowRight, Star, Calendar } from 'lucide-react';
+import { courses } from '@/app/data/mockData';
+import { ContactForm } from '@/app/components/ContactForm';
+
+export function CoursesPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('all');
+  const navigate = useNavigate();
+
+
+  const levels = [
+    { id: 'all', name: 'Все уровни' },
+    { id: 'beginner', name: 'Начальный' },
+    { id: 'advanced', name: 'Продвинутый' },
+  ];
+
+  const filteredCourses = courses.filter((course) => {
+    const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel;
+    const matchesSearch =
+      searchTerm === '' ||
+      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesLevel && matchesSearch;
+  });
+
+  // Добавляем недостающие поля для отображения
+  const coursesWithDetails = filteredCourses.map((course, idx) => ({
+    ...course,
+    students: [150, 85, 42, 68, 95, 120][idx] || Math.floor(Math.random() * 100) + 50,
+    rating: [4.9, 5.0, 4.8, 4.9, 4.7, 4.8][idx] || 4.8,
+  }));
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#009B00]/10 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* Hero Section */}
+      <section
+        className="relative py-32 overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #40AB40 0%, #89E689 100%)',
+        }}
+      >
+        <div className="container mx-auto px-4 text-center text-white">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-6xl font-bold mb-6">Курсы по грумингу</h1>
+            <p className="text-2xl mb-8 max-w-2xl mx-auto">
+              Станьте профессиональным грумером с нашей академией
+            </p>
+            <Link
+              to="/book/course"
+              className="inline-block bg-white text-[#009B00] px-8 py-4 rounded-full text-lg font-bold hover:bg-gray-100 transition-colors"
+            >
+              Запись на курс
+              <ArrowRight className="inline-block ml-2" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+
+      {/* Filters */}
+      <section className="py-8 bg-white dark:bg-gray-900 shadow-lg">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Поиск курсов..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#009B00]"
+              />
+            </div>
+
+            {/* Level Filter */}
+            <div className="flex gap-2">
+              {levels.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => setSelectedLevel(level.id)}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all ${
+                    selectedLevel === level.id
+                      ? 'bg-[#009B00] text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {level.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Courses Grid */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+            {coursesWithDetails.map((course, index) => (
+              <motion.div
+                key={course.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -10 }}
+                onClick={() => navigate(`/courses/${course.id}`)}
+                className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl cursor-pointer group flex flex-col h-full"
+              >
+                <div className="relative h-64 overflow-hidden flex-shrink-0">
+                  <img
+                    src={course.image}
+                    alt={course.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute top-4 left-4 bg-[#EF476F] text-white px-4 py-2 rounded-full font-bold text-sm">
+                    {course.level === 'beginner' ? 'Начальный' : 'Продвинутый'}
+                  </div>
+                  <div className="absolute top-4 right-4 bg-white text-[#009B00] px-4 py-2 rounded-full font-bold">
+                    {course.price.toLocaleString()}₽
+                  </div>
+                </div>
+
+                <div className="p-6 flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center gap-4 mb-3 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {course.duration}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      {course.students}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-[#EF476F] text-[#EF476F]" />
+                      {course.rating}
+                    </div>
+                  </div>
+
+                  <h3 className="text-2xl font-bold mb-3">{course.name}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 flex-1">
+                    {course.description}
+                  </p>
+
+                  <div className="flex items-center gap-2 mb-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        course.format === 'online'
+                          ? 'bg-blue-100 text-blue-700'
+                          : course.format === 'offline'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-purple-100 text-purple-700'
+                      }`}
+                    >
+                      {course.format === 'online'
+                        ? 'Онлайн'
+                        : course.format === 'offline'
+                        ? 'Очно'
+                        : 'Гибрид'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-auto pt-2" onClick={(e) => e.stopPropagation()}>
+                    <Link
+                      to={`/courses/${course.id}`}
+                      className="flex items-center gap-2 text-[#009B00] font-bold hover:gap-4 transition-all"
+                    >
+                      Подробнее о курсе
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
+                    <Link
+                      to={`/book/course/${course.id}`}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#40AB40] hover:bg-[#89E689] text-white rounded-xl font-medium transition-colors"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Записаться
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Schedule */}
+      <section className="py-24 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-bold mb-6">Ближайшие старты</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300">
+              Запишитесь на следующий поток прямо сейчас
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-6">
+            {[
+              { course: 'Основы груминга собак', date: '1 февраля 2026', spots: 12 },
+              { course: 'Профессиональный груминг', date: '15 февраля 2026', spots: 8 },
+              { course: 'Креативный груминг', date: '1 марта 2026', spots: 15 },
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-gradient-to-r from-[#009B00]/10 to-[#89E689]/10 rounded-2xl p-6 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 bg-[#009B00] rounded-xl flex items-center justify-center">
+                    <Calendar className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">{item.course}</h3>
+                    <p className="text-gray-600 dark:text-gray-300">Старт: {item.date}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    Осталось {item.spots} мест
+                  </p>
+                  <Link
+                    to={`/book/course/${index + 1}`}
+                    className="inline-block bg-[#009B00] text-white px-6 py-2 rounded-full font-bold hover:bg-[#40AB40] transition-colors"
+                  >
+                    Записаться
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Form */}
+      <ContactForm />
+    </div>
+  );
+}
