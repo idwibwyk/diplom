@@ -11,9 +11,7 @@ export function PersonalDataConsentPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="w-20 h-20 bg-gradient-to-br from-[#53C9CA] to-[#9ADFE0] rounded-full flex items-center justify-center mx-auto mb-6">
-            <FileCheck className="w-10 h-10 text-white" />
-          </div>
+          
           <h1 className="text-5xl font-bold mb-6">Согласие на обработку персональных данных</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
             MARS GROOM • Актуальная версия: 1 января 2026 г.
@@ -27,8 +25,7 @@ export function PersonalDataConsentPage() {
             transition={{ delay: 0.1 }}
             className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl"
           >
-            <div className="flex items-start gap-4 mb-4">
-              <Shield className="w-6 h-6 text-[#53C9CA] flex-shrink-0 mt-1" />
+        
               <div>
                 <h2 className="text-2xl font-bold mb-4">Где используются ваши данные</h2>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
@@ -41,7 +38,7 @@ export function PersonalDataConsentPage() {
                   <li>Работе личного кабинета и дневника питомца</li>
                 </ul>
               </div>
-            </div>
+         
           </motion.section>
 
           <motion.section

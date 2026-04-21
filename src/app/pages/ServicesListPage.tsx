@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Search, Clock, ArrowRight, Calendar, Dog, Cat, Sparkles, Star } from 'lucide-react';
-import { services as allServices } from '@/app/data/mockData';
+import { Search, Clock, ArrowRight, Calendar, Dog, Cat, Sparkles, Star, Loader2 } from 'lucide-react';
+import { useEntity } from '@/app/hooks';
 import { ContactForm } from '@/app/components/ContactForm';
+
+type ServiceRow = { id: number; name: string; category: string; type: string; price: number; duration: string; description: string; image: string | null; breed: string | null; price_range: string | null };
 
 export function ServicesListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const navigate = useNavigate();
-
-  const services = allServices;
+  const { list: services, loadingList, loadingListError } = useEntity<ServiceRow>('services', { fetchListOnMount: true, listParams: { limit: 100 } });
 
   const categories = [
     { id: 'all', name: 'Все услуги', icon: Star },
@@ -24,40 +25,62 @@ export function ServicesListPage() {
     const matchesSearch =
       searchTerm === '' ||
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.breed?.toLowerCase().includes(searchTerm.toLowerCase());
+      (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (service.breed && service.breed.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
+  if (loadingList) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#4A90E2] animate-spin" />
+      </div>
+    );
+  }
+
+  if (loadingListError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <p className="text-amber-600 dark:text-amber-400">{loadingListError}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#073B4C]/10 to-white dark:from-gray-900 dark:to-gray-800">
-      {/* Hero Section */}
-      <section
-        className="relative py-24 overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #4A90E2 0%, #9EC3EF 100%)',
-        }}
+    <div className="min-h-screen bg-gradient-to-b from-[#4A90E2]/5 via-white to-[#9EC3EF]/5 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Hero в стиле CourseSchedulePage (голубая тема для /services) */}
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative py-20 md:py-28 overflow-hidden"
       >
-        <div className="container mx-auto px-4 text-center text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#4A90E2]/20 via-transparent to-[#9EC3EF]/10 dark:from-[#4A90E2]/30 dark:to-transparent" />
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ delay: 0.2 }}
+            className="text-center max-w-3xl mx-auto"
           >
-            <h1 className="text-5xl font-bold mb-6">Прайс-лист</h1>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-[#4A90E2] to-[#9EC3EF] bg-clip-text text-transparent">
+              Прайс-лист
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8">
               Выберите подходящую услугу для вашего питомца
             </p>
-            <Link
-              to="/book/service"
-              className="inline-block bg-white text-[#4A90E2] px-12 py-6 rounded-full text-xl font-bold shadow-2xl hover:shadow-3xl transition-all"
-            >
-              Запись на услугу
-              <ArrowRight className="inline-block ml-2" />
-            </Link>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <Link
+                to="/book/service"
+                className="inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-[#4A90E2] to-[#9EC3EF] text-white rounded-2xl font-bold text-lg shadow-lg shadow-[#4A90E2]/30 hover:shadow-xl transition-shadow"
+              >
+                Запись на услугу
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Filters */}
       <section className="py-8 bg-white dark:bg-gray-900 shadow-lg">
@@ -115,12 +138,12 @@ export function ServicesListPage() {
               >
                 <div className="relative h-64 overflow-hidden flex-shrink-0">
                   <img
-                    src={service.image}
+                    src={service.image || '/pictures/hero-section groom room services.jpg'}
                     alt={service.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 right-4 bg-[#4A90E2] text-white px-4 py-2 rounded-full font-bold">
-                    {service.priceRange || `${service.price}₽`}
+                    {service.price_range || `${service.price}₽`}
                   </div>
                 </div>
 

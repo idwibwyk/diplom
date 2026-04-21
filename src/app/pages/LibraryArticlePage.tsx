@@ -1,24 +1,57 @@
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Video, FileText, BookMarked, Clock } from 'lucide-react';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import { ArrowRight, BookOpen, Video, FileText, BookMarked, Clock, Loader2 } from 'lucide-react';
+import { useEntity } from '../hooks';
 
-interface LibraryArticle {
-  id: number;
-  title: string;
-  type: 'article' | 'video' | 'guide';
-  category: string;
-  preview: string;
-  content: string;
-  isPremium: boolean;
-  readTime?: string;
-  videoDuration?: string;
-}
+type LibraryArticleRow = { id: number; title: string; slug: string; excerpt: string | null; content: string | null; category: string | null; image: string | null };
 
 export function LibraryArticlePage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const libraryBase = location.pathname.startsWith('/library') ? '/library' : '/courses/library';
+  const articleId = id && /^\d+$/.test(id) ? parseInt(id, 10) : null;
+  const { item: articleData, loadingItem, loadingItemError } = useEntity<LibraryArticleRow>('library_articles', {
+    fetchListOnMount: false,
+    id: articleId,
+    fetchItemOnMount: !!articleId,
+    enabled: !!articleId,
+  });
 
-  // Mock articles - в реальном приложении это будет из API
-  const articles: LibraryArticle[] = [
+  const article = useMemo(() => {
+    if (!articleData) return null;
+    return {
+      id: articleData.id,
+      title: articleData.title,
+      type: 'article' as const,
+      category: articleData.category ?? 'basics',
+      preview: articleData.excerpt ?? '',
+      content: articleData.content ?? '<p>Содержание статьи.</p>',
+      isPremium: false,
+      readTime: '10 мин',
+    };
+  }, [articleData]);
+
+  if (articleId && loadingItem) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#40AB40] animate-spin" />
+      </div>
+    );
+  }
+  if (articleId && loadingItemError) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 py-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-red-500 mb-4">{loadingItemError}</p>
+          <Link to={libraryBase} className="text-[#40AB40] hover:underline">Вернуться к библиотеке</Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback mock for when API returns nothing (backward compat)
+  const mockArticles: { id: number; title: string; type: 'article' | 'video' | 'guide'; category: string; preview: string; content: string; isPremium: boolean; readTime?: string; videoDuration?: string }[] = [
     {
       id: 1,
       title: 'Основы груминга для начинающих',
@@ -221,15 +254,15 @@ export function LibraryArticlePage() {
     },
   ];
 
-  const article = articles.find((a) => a.id === parseInt(id || '1'));
+  const displayArticle = article ?? mockArticles.find((a) => a.id === parseInt(id || '1'));
 
-  if (!article) {
+  if (!displayArticle) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 py-24">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">Статья не найдена</h1>
           <Link
-            to="/library"
+            to={libraryBase}
             className="text-[#40AB40] hover:underline"
           >
             Вернуться к библиотеке
@@ -250,7 +283,7 @@ export function LibraryArticlePage() {
     }
   };
 
-  const Icon = getTypeIcon(article.type);
+  const Icon = getTypeIcon(displayArticle.type);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -268,7 +301,7 @@ export function LibraryArticlePage() {
             transition={{ duration: 0.8 }}
           >
             <Link
-              to="/library"
+              to={libraryBase}
               className="inline-flex items-center gap-2 mb-6 text-white hover:opacity-80 transition-opacity"
             >
               <ArrowRight className="w-5 h-5 rotate-180" />
@@ -277,25 +310,25 @@ export function LibraryArticlePage() {
             <div className="mb-4 flex items-center gap-4">
               <Icon className="w-8 h-8" />
               <span className="inline-block px-4 py-2 bg-white/20 rounded-full text-sm font-bold">
-                {article.category === 'techniques' ? 'Техники стрижки' : 
-                 article.category === 'health' ? 'Здоровье питомцев' :
-                 article.category === 'basics' ? 'Основы груминга' :
-                 article.category === 'breeds' ? 'Породы собак' :
-                 article.category === 'tools' ? 'Инструменты' : 'Статья'}
+                {displayArticle.category === 'techniques' ? 'Техники стрижки' : 
+                 displayArticle.category === 'health' ? 'Здоровье питомцев' :
+                 displayArticle.category === 'basics' ? 'Основы груминга' :
+                 displayArticle.category === 'breeds' ? 'Породы собак' :
+                 displayArticle.category === 'tools' ? 'Инструменты' : 'Статья'}
               </span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">{article.title}</h1>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">{displayArticle.title}</h1>
             <div className="flex flex-wrap items-center gap-6 text-white/90">
-              {article.readTime && (
+              {displayArticle.readTime && (
                 <div className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  <span>{article.readTime}</span>
+                  <span>{displayArticle.readTime}</span>
                 </div>
               )}
-              {article.videoDuration && (
+              {'videoDuration' in displayArticle && displayArticle.videoDuration && (
                 <div className="flex items-center gap-2">
                   <Video className="w-5 h-5" />
-                  <span>{article.videoDuration}</span>
+                  <span>{displayArticle.videoDuration}</span>
                 </div>
               )}
             </div>
@@ -309,7 +342,7 @@ export function LibraryArticlePage() {
           <div className="max-w-4xl mx-auto">
             <div
               className="prose prose-lg dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              dangerouslySetInnerHTML={{ __html: displayArticle.content }}
               style={{
                 color: '#333',
               }}

@@ -10,9 +10,7 @@ export function PrivacyPolicyPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="w-20 h-20 bg-gradient-to-br from-[#53C9CA] to-[#9ADFE0] rounded-full flex items-center justify-center mx-auto mb-6">
-            <Shield className="w-10 h-10 text-white" />
-          </div>
+          
           <h1 className="text-5xl font-bold mb-6">Политика конфиденциальности</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
             Последнее обновление: 1 января 2026 г.

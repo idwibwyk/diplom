@@ -2,10 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { useLocation, Link } from 'react-router-dom';
 import { Send, Mail, Phone, MapPin } from 'lucide-react';
+import React from 'react';
 
 export function ContactForm() {
   const location = useLocation();
   const mapRef = useRef<HTMLDivElement>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const yandexApiKey = (import.meta as any).env?.VITE_YMAPS_API_KEY as string | undefined;
 
   // Определяем цвет в зависимости от страницы
   const getColorScheme = () => {
@@ -16,7 +19,7 @@ export function ContactForm() {
         gradient: 'from-[#4A90E2] to-[#9EC3EF]',
         ring: 'ring-[#4A90E2]',
       };
-    } else if (location.pathname.startsWith('/courses') || location.pathname.startsWith('/library')) {
+    } else if (location.pathname.startsWith('/courses') || location.pathname.startsWith('/courses/library')) {
       return {
         primary: '#40AB40',
         secondary: '#89E689',
@@ -44,26 +47,59 @@ export function ContactForm() {
 
   useEffect(() => {
     // Яндекс карта
-    if (mapRef.current && !mapRef.current.querySelector('script')) {
-      const script = document.createElement('script');
-      script.src = 'https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU';
-      script.async = true;
-      script.onload = () => {
-        if ((window as any).ymaps) {
-          (window as any).ymaps.ready(() => {
-            const map = new (window as any).ymaps.Map(mapRef.current!, {
-              center: [56.106309, 40.366696], // Владимир, ул. Нижняя Дуброва, д. 7
-              zoom: 15,
-            });
-            const placemark = new (window as any).ymaps.Placemark([56.106309, 40.366696], {
-              balloonContent: 'MARS GROOM<br>г. Владимир, ул. Нижняя Дуброва, д. 7',
-            });
-            map.geoObjects.add(placemark);
-          });
-        }
-      };
-      document.head.appendChild(script);
+    if (!mapRef.current) return;
+    if (!yandexApiKey) {
+      setMapError('Карта временно недоступна (не задан ключ API Яндекс.Карт)');
+      return;
     }
+
+    const initMap = () => {
+      const ymaps = (window as any).ymaps;
+      if (!ymaps || !mapRef.current) return;
+      ymaps.ready(() => {
+        try {
+          // На всякий случай чистим контейнер, чтобы не было повторной инициализации
+          mapRef.current!.innerHTML = '';
+          const map = new ymaps.Map(mapRef.current!, {
+            center: [56.106309, 40.366696], // Владимир, ул. Нижняя Дуброва, д. 7
+            zoom: 15,
+          });
+          const placemark = new ymaps.Placemark([56.106309, 40.366696], {
+            balloonContent: 'MARS GROOM<br>г. Владимир, ул. Нижняя Дуброва, д. 7',
+          });
+          map.geoObjects.add(placemark);
+          setMapError(null);
+        } catch {
+          setMapError('Не удалось отобразить карту');
+        }
+      });
+    };
+
+    // Если API уже подключено — просто инициализируем карту
+    if ((window as any).ymaps) {
+      initMap();
+      return;
+    }
+
+    // Подключаем скрипт один раз на документ
+    const existing = document.querySelector('script[data-ymaps-api="true"]') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener('load', initMap, { once: true });
+      existing.addEventListener(
+        'error',
+        () => setMapError('Не удалось загрузить API Яндекс.Карт'),
+        { once: true }
+      );
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.dataset.ymapsApi = 'true';
+    script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(yandexApiKey)}&lang=ru_RU`;
+    script.async = true;
+    script.onload = initMap;
+    script.onerror = () => setMapError('Не удалось загрузить API Яндекс.Карт');
+    document.head.appendChild(script);
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -114,8 +150,13 @@ export function ContactForm() {
             </div>
 
             {/* Яндекс карта */}
-            <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg">
+            <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg relative">
               <div ref={mapRef} className="w-full h-full" />
+              {mapError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 p-4 text-center">
+                  <p className="text-sm text-gray-700 dark:text-gray-200">{mapError}</p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-start gap-4">

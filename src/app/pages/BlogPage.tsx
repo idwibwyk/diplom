@@ -1,72 +1,66 @@
+import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Calendar, User, ArrowRight, Clock, BookOpen } from 'lucide-react';
+import { Calendar, User, ArrowRight, Clock, BookOpen, Loader2 } from 'lucide-react';
+import { useEntity } from '@/app/hooks';
+
+type BlogPostRow = { id: number; title: string; excerpt: string | null; content: string | null; author_id: number | null; category: string | null; read_time: string | null; image: string | null; published_at: string | null };
+type MasterRow = { id: number; full_name: string };
 
 export function BlogPage() {
-  const posts = [
-    {
-      id: 1,
-      title: 'Как выбрать правильную стрижку для вашей собаки',
-      excerpt: 'Руководство по выбору стрижки в зависимости от породы, типа шерсти и образа жизни питомца.',
-      author: 'Анна Петрова',
-      date: '2026-01-15',
-      category: 'Уход',
-      readTime: '5 мин',
-      image: 'https://images.unsplash.com/photo-1648643118660-efb8eb0aea93?w=800',
-    },
-    {
-      id: 2,
-      title: '10 советов по уходу за шерстью собаки между визитами к грумеру',
-      excerpt: 'Практические советы от наших мастеров о том, как поддерживать шерсть питомца в идеальном состоянии.',
-      author: 'Мария Иванова',
-      date: '2026-01-10',
-      category: 'Советы',
-      readTime: '7 мин',
-      image: 'https://images.unsplash.com/photo-1728448644193-34eb04460c95?w=800',
-    },
-    {
-      id: 3,
-      title: 'Как подготовить щенка к первому визиту к грумеру',
-      excerpt: 'Важные рекомендации для владельцев щенков, которые хотят приучить питомца к грумингу.',
-      author: 'Елена Смирнова',
-      date: '2026-01-05',
-      category: 'Обучение',
-      readTime: '6 мин',
-      image: 'https://images.unsplash.com/photo-1752178407704-6a088ede9ef9?w=800',
-    },
-    {
-      id: 4,
-      title: 'Сезонный груминг: что нужно знать о летнем уходе',
-      excerpt: 'Особенности ухода за питомцем в жаркое время года и какие процедуры необходимы.',
-      author: 'Ольга Козлова',
-      date: '2025-12-28',
-      category: 'Сезонный уход',
-      readTime: '5 мин',
-      image: 'https://images.unsplash.com/photo-1653150756437-41454967e9f5?w=800',
-    },
-    {
-      id: 5,
-      title: 'Проблемы с кожей у собак: когда обращаться к грумеру',
-      excerpt: 'Признаки проблем с кожей, которые можно заметить во время груминга, и как на них реагировать.',
-      author: 'Иван Соколов',
-      date: '2025-12-20',
-      category: 'Здоровье',
-      readTime: '8 мин',
-      image: 'https://images.unsplash.com/photo-1759134155377-4207d89b39ec?w=800',
-    },
-    {
-      id: 6,
-      title: 'История груминга: от древности до наших дней',
-      excerpt: 'Интересная экскурсия в историю профессии грумера и как она развивалась на протяжении веков.',
-      author: 'Дарья Морозова',
-      date: '2025-12-15',
-      category: 'История',
-      readTime: '10 мин',
-      image: 'https://images.unsplash.com/photo-1752021382723-28103aa59245?w=800',
-    },
-  ];
+  const [selectedCategory, setSelectedCategory] = useState('Все');
+  const { list: postsRaw, loadingList, loadingListError } = useEntity<BlogPostRow>('blog_posts', {
+    fetchListOnMount: true,
+    listParams: { limit: 50 },
+  });
+  const { list: mastersList } = useEntity<MasterRow>('masters', { fetchListOnMount: true, listParams: { limit: 50 } });
 
-  const categories = ['Все', 'Уход', 'Советы', 'Обучение', 'Сезонный уход', 'Здоровье', 'История'];
+  const getAuthorName = (authorId: number | null) => {
+    if (!authorId) return 'Команда Mars Groom';
+    const m = mastersList.find((x) => x.id === authorId);
+    return m?.full_name ?? 'Команда Mars Groom';
+  };
+
+  const posts = useMemo(
+    () =>
+      postsRaw.map((p) => ({
+        id: p.id,
+        title: p.title,
+        excerpt: p.excerpt ?? '',
+        author: getAuthorName(p.author_id),
+        date: p.published_at ?? p.id.toString(),
+        category: p.category ?? 'Статья',
+        readTime: p.read_time ?? '5 мин',
+        image: p.image ?? 'https://images.unsplash.com/photo-1648643118660-efb8eb0aea93?w=800',
+      })),
+    [postsRaw, mastersList]
+  );
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>(['Все']);
+    posts.forEach((p) => p.category && cats.add(p.category));
+    return Array.from(cats);
+  }, [posts]);
+
+  const filteredPosts = useMemo(() => {
+    if (selectedCategory === 'Все') return posts;
+    return posts.filter((p) => p.category === selectedCategory);
+  }, [posts, selectedCategory]);
+
+  if (loadingList) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#E56E9B] animate-spin" />
+      </div>
+    );
+  }
+  if (loadingListError) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <p className="text-red-500">{loadingListError}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -110,7 +104,7 @@ export function BlogPage() {
       <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {posts.map((post, index) => (
+            {filteredPosts.map((post, index) => (
               <motion.div
                 key={post.id}
                 initial={{ opacity: 0, y: 20 }}

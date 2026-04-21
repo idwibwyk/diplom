@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Search, Clock, Users, ArrowRight, Star, Calendar } from 'lucide-react';
-import { courses } from '@/app/data/mockData';
+import { Search, Clock, Users, ArrowRight, Star, Calendar, Loader2 } from 'lucide-react';
+import { useEntity } from '@/app/hooks';
 import { ContactForm } from '@/app/components/ContactForm';
+
+type CourseRow = { id: number; name: string; level: string; format: string; duration: string; price: number; description: string | null; image: string | null };
 
 export function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const navigate = useNavigate();
-
+  const { list: coursesList, loadingList, loadingListError } = useEntity<CourseRow>('courses', {
+    fetchListOnMount: true,
+    listParams: { limit: 50 },
+  });
 
   const levels = [
     { id: 'all', name: 'Все уровни' },
@@ -17,51 +22,75 @@ export function CoursesPage() {
     { id: 'advanced', name: 'Продвинутый' },
   ];
 
-  const filteredCourses = courses.filter((course) => {
-    const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel;
-    const matchesSearch =
-      searchTerm === '' ||
-      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesLevel && matchesSearch;
-  });
+  const filteredCourses = useMemo(() => {
+    return coursesList.filter((course) => {
+      const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel;
+      const matchesSearch =
+        searchTerm === '' ||
+        (course.name && course.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (course.description && course.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesLevel && matchesSearch;
+    });
+  }, [coursesList, selectedLevel, searchTerm]);
 
-  // Добавляем недостающие поля для отображения
-  const coursesWithDetails = filteredCourses.map((course, idx) => ({
-    ...course,
-    students: [150, 85, 42, 68, 95, 120][idx] || Math.floor(Math.random() * 100) + 50,
-    rating: [4.9, 5.0, 4.8, 4.9, 4.7, 4.8][idx] || 4.8,
-  }));
+  const coursesWithDetails = useMemo(() => {
+    return filteredCourses.map((course, idx) => ({
+      ...course,
+      students: [150, 85, 42, 68, 95, 120][idx] ?? 80,
+      rating: [4.9, 5.0, 4.8, 4.9, 4.7, 4.8][idx] ?? 4.8,
+    }));
+  }, [filteredCourses]);
+
+  if (loadingList) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#009B00] animate-spin" />
+      </div>
+    );
+  }
+  if (loadingListError) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <p className="text-red-500">{loadingListError}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#009B00]/10 to-white dark:from-gray-900 dark:to-gray-800">
-      {/* Hero Section */}
-      <section
-        className="relative py-32 overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #40AB40 0%, #89E689 100%)',
-        }}
+    <div className="min-h-screen bg-gradient-to-b from-[#009B00]/5 via-white to-[#40AB40]/5 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Hero в стиле /courses/schedule */}
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative py-20 md:py-28 overflow-hidden"
       >
-        <div className="container mx-auto px-4 text-center text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#40AB40]/20 via-transparent to-[#89E689]/10 dark:from-[#40AB40]/30 dark:to-transparent" />
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ delay: 0.2 }}
+            className="text-center max-w-3xl mx-auto"
           >
-            <h1 className="text-6xl font-bold mb-6">Курсы по грумингу</h1>
-            <p className="text-2xl mb-8 max-w-2xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-[#40AB40] to-[#89E689] bg-clip-text text-transparent">
+              Курсы по грумингу
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8">
               Станьте профессиональным грумером с нашей академией
             </p>
-            <Link
-              to="/book/course"
-              className="inline-block bg-white text-[#009B00] px-8 py-4 rounded-full text-lg font-bold hover:bg-gray-100 transition-colors"
-            >
-              Запись на курс
-              <ArrowRight className="inline-block ml-2" />
-            </Link>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <Link
+                to="/book/course"
+                className="inline-flex items-center gap-2 px-10 py-4 btn-gradient-green text-white rounded-2xl font-bold text-lg shadow-lg shadow-[#40AB40]/30 hover:shadow-xl transition-shadow"
+              >
+                Запись на курс
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
 
       {/* Filters */}
@@ -116,7 +145,7 @@ export function CoursesPage() {
               >
                 <div className="relative h-64 overflow-hidden flex-shrink-0">
                   <img
-                    src={course.image}
+                    src={course.image ?? '/pictures/The basics of dog grooming.jpg'}
                     alt={course.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />

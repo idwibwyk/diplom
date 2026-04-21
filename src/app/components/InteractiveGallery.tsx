@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ZoomIn, Play, Pause } from 'lucide-react';
+import React from 'react';
 
 interface GalleryItem {
   id: number;

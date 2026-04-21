@@ -1,71 +1,140 @@
-import { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import {
   Clock,
   DollarSign,
   Users,
   Award,
-  BookOpen,
   PlayCircle,
   CheckCircle,
   Star,
   Calendar,
   FileText,
   Video,
+  Heart,
 } from 'lucide-react';
-import * as Accordion from '@radix-ui/react-accordion';
 import { ContactForm } from '@/app/components/ContactForm';
 import { FavoriteButton } from '@/app/components/FavoriteButton';
-import { courses as allCourses, masters } from '@/app/data/mockData';
+import { useEntity } from '@/app/hooks';
 
-const extendedMock: Record<number, { program: any[]; instructor: any; reviews: any[]; bonuses: string[]; demoLesson: any }> = {
-  1: {
-    program: [
-      { id: 1, name: 'Модуль 1: Введение в груминг', lessons: [{ id: 1, name: 'История груминга', duration: '30 мин', type: 'video' }, { id: 2, name: 'Этика работы с животными', duration: '45 мин', type: 'video' }, { id: 3, name: 'Безопасность в работе', duration: '40 мин', type: 'article' }], progress: 0 },
-      { id: 2, name: 'Модуль 2: Инструменты и оборудование', lessons: [{ id: 4, name: 'Виды ножниц и их применение', duration: '50 мин', type: 'video' }, { id: 5, name: 'Машинки для стрижки', duration: '45 мин', type: 'video' }, { id: 6, name: 'Расчески и щетки', duration: '30 мин', type: 'article' }], progress: 0 },
-      { id: 3, name: 'Модуль 3: Практика стрижки', lessons: [{ id: 7, name: 'Стрижка мелких пород', duration: '60 мин', type: 'video' }, { id: 8, name: 'Практическое занятие', duration: '120 мин', type: 'practice' }], progress: 0 },
-    ],
-    instructor: { name: 'Анна Петрова', experience: '10 лет', specialization: 'Мелкие породы, декоративные стрижки', rating: 4.9, image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' },
-    reviews: [{ id: 1, author: 'Мария Иванова', rating: 5, text: 'Отличный курс! Всё понятно объясняется, много практики. Рекомендую!', date: '2026-01-10' }, { id: 2, author: 'Иван Соколов', rating: 5, text: 'После курса сразу начал работать. Преподаватель очень опытный.', date: '2026-01-05' }],
-    bonuses: ['Доступ к библиотеке знаний на 1 год', 'Сертификат по окончании', 'Помощь с трудоустройством', 'Доступ к закрытому сообществу'],
-    demoLesson: { id: 1, name: 'Введение в груминг', duration: '30 мин', type: 'video' },
-  },
-};
+type CourseRow = { id: number; name: string; level: string; format: string; duration: string; price: number; description: string | null; image: string | null; loyalty_points?: number | null };
+type ScheduleRow = { id: number; course_id: number; start_date: string; start_time: string | null; spots: number };
+type ReviewRow = { id: number; course_id: number | null; rating: number; text: string; user_id: number | null; created_at: string };
+type CourseInstructorRow = { id: number; course_id: number; master_id: number };
+type MasterRow = { id: number; full_name: string; image: string | null; rating: number | null; experience: number | null; specialization: string | null };
+type ModuleRow = { id: number; course_id: number; title: string; description: string | null; sort_order: number };
+type ContentRow = { id: number; module_id: number; title: string; type: string; duration_minutes: number | null; sort_order: number };
 
-function getExtended(id: number) {
-  return extendedMock[id] ?? extendedMock[1];
-}
+const DEFAULT_REQUIREMENTS = ['Возраст от 18 лет', 'Желание учиться и развиваться', 'Любовь к животным', 'Готовность к практическим занятиям'];
+const DEFAULT_BONUSES = ['Доступ к библиотеке знаний на 1 год', 'Сертификат по окончании', 'Помощь с трудоустройством', 'Доступ к закрытому сообществу'];
 
 export function CourseDetailPage() {
   const { id } = useParams();
   const [reviewIndex, setReviewIndex] = useState(0);
-  const cid = parseInt(id || '1', 10);
-  const base = allCourses.find((c) => c.id === cid) ?? allCourses[0];
-  const ext = getExtended(base.id);
-  const course = {
-    ...base,
-    image: base.image ?? 'https://images.unsplash.com/photo-1653150756437-41454967e9f5?w=1200',
-    students: 150,
-    rating: 4.9,
-    requirements: ['Возраст от 18 лет', 'Желание учиться и развиваться', 'Любовь к животным', 'Готовность к практическим занятиям'],
-    program: ext.program,
-    instructor: ext.instructor,
-    reviews: ext.reviews,
-    bonuses: ext.bonuses,
-    demoLesson: ext.demoLesson,
-  };
-  const instructorMaster = masters.find((m) => m.name === course.instructor.name);
+  const courseId = id ? parseInt(id, 10) : null;
+  const { item: courseData, loadingItem, loadingItemError } = useEntity<CourseRow>('courses', {
+    fetchListOnMount: false,
+    id: courseId,
+    fetchItemOnMount: !!courseId,
+    enabled: !!courseId,
+  });
+  const { list: scheduleList, refetchList: refetchSchedules } = useEntity<ScheduleRow>('course_schedules', { fetchListOnMount: false });
+  const { list: reviewsList, refetchList: refetchReviews } = useEntity<ReviewRow>('reviews', { fetchListOnMount: false });
+  const { list: instructorsList, refetchList: refetchInstructors } = useEntity<CourseInstructorRow>('course_instructors', { fetchListOnMount: false });
+  const { list: mastersList } = useEntity<MasterRow>('masters', { fetchListOnMount: true, listParams: { limit: 50 } });
+  const { list: modulesList, refetchList: refetchModules } = useEntity<ModuleRow>('course_modules', { fetchListOnMount: false });
 
-  const calculateTotalProgress = () => {
-    const totalLessons = course.program.reduce((sum, module) => sum + module.lessons.length, 0);
-    const completedLessons = course.program.reduce(
-      (sum, module) => sum + module.lessons.filter((l) => module.progress > 0).length,
-      0
+  useEffect(() => {
+    if (!courseId) return;
+    refetchSchedules({ course_id: courseId, limit: 20 });
+    refetchReviews({ course_id: courseId, type: 'course', limit: 50 });
+    refetchInstructors({ course_id: courseId });
+    refetchModules({ course_id: courseId, limit: 30 });
+  }, [courseId, refetchSchedules, refetchReviews, refetchInstructors, refetchModules]);
+
+  const instructorMaster = useMemo(() => {
+    if (!instructorsList.length || !mastersList.length) return null;
+    const firstId = instructorsList[0].master_id;
+    return mastersList.find((m) => m.id === firstId) ?? null;
+  }, [instructorsList, mastersList]);
+
+  const course = useMemo(() => {
+    if (!courseData) {
+      return {
+        id: 0,
+        name: 'Курс не найден',
+        duration: '',
+        price: 0,
+        image: '/pictures/The basics of dog grooming.jpg',
+        description: '',
+        students: 0,
+        rating: 4.8,
+        requirements: DEFAULT_REQUIREMENTS,
+        program: [] as { id: number; name: string; lessons: { id: number; name: string; duration: string; type: string }[]; progress: number }[],
+        instructor: null as { name: string; experience: string; specialization: string; rating: number; image: string } | null,
+        reviews: [] as { id: number; author: string; rating: number; text: string; date: string }[],
+        bonuses: DEFAULT_BONUSES,
+        demoLesson: { id: 0, name: 'Введение', duration: '30 мин', type: 'video' as const },
+      };
+    }
+    const d = courseData;
+    const instructor = instructorMaster
+      ? {
+          name: instructorMaster.full_name,
+          experience: instructorMaster.experience != null ? `${instructorMaster.experience} лет` : '10 лет',
+          specialization: instructorMaster.specialization ?? 'Груминг',
+          rating: instructorMaster.rating ?? 4.9,
+          image: instructorMaster.image ?? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+        }
+      : null;
+    const reviews = reviewsList.map((r) => ({
+      id: r.id,
+      author: 'Выпускник',
+      rating: r.rating,
+      text: r.text,
+      date: r.created_at?.slice(0, 10) ?? '',
+    }));
+    const program = modulesList.length
+      ? modulesList.map((mod) => ({
+          id: mod.id,
+          name: mod.title,
+          lessons: [] as { id: number; name: string; duration: string; type: string }[],
+          progress: 0,
+        }))
+      : [
+          { id: 1, name: 'Модуль 1: Введение в груминг', lessons: [{ id: 1, name: 'История груминга', duration: '30 мин', type: 'video' }, { id: 2, name: 'Этика работы с животными', duration: '45 мин', type: 'video' }], progress: 0 },
+          { id: 2, name: 'Модуль 2: Инструменты и оборудование', lessons: [{ id: 3, name: 'Виды ножниц и их применение', duration: '50 мин', type: 'video' }], progress: 0 },
+        ];
+    return {
+      ...d,
+      image: d.image ?? 'https://images.unsplash.com/photo-1653150756437-41454967e9f5?w=1200',
+      students: 150,
+      rating: 4.9,
+      requirements: DEFAULT_REQUIREMENTS,
+      program,
+      instructor,
+      reviews,
+      bonuses: DEFAULT_BONUSES,
+      demoLesson: { id: 1, name: 'Введение в груминг', duration: '30 мин', type: 'video' as const },
+    };
+  }, [courseData, instructorMaster, reviewsList, modulesList]);
+
+  if (courseId && loadingItem) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#009B00] animate-spin" />
+      </div>
     );
-    return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-  };
+  }
+  if (courseId && loadingItemError) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <p className="text-red-500">{loadingItemError}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -349,6 +418,11 @@ export function CourseDetailPage() {
                   {course.price.toLocaleString()}₽
                 </p>
                 <p className="text-sm text-gray-500 mt-1">{course.duration}</p>
+                {courseData?.loyalty_points != null && courseData.loyalty_points > 0 && (
+                  <p className="text-sm text-[#009B00] mt-2 flex items-center justify-center gap-1">
+                    <Heart className="w-4 h-4 fill-current" /> +{courseData.loyalty_points} лапок за запись
+                  </p>
+                )}
               </div>
 
               <Link
@@ -376,37 +450,39 @@ export function CourseDetailPage() {
             </div>
 
             {/* Instructor */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-              <h4 className="font-bold mb-4">Преподаватель</h4>
-              <div className="flex items-center gap-4">
-                <img
-                  src={course.instructor.image}
-                  alt={course.instructor.name}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-                <div>
-                  <p className="font-bold">{course.instructor.name}</p>
-                  <p className="text-sm text-gray-500">
-                    Опыт: {course.instructor.experience}
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm">{course.instructor.rating}</span>
+            {course.instructor && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+                <h4 className="font-bold mb-4">Преподаватель</h4>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={course.instructor.image}
+                    alt={course.instructor.name}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-bold">{course.instructor.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Опыт: {course.instructor.experience}
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm">{course.instructor.rating}</span>
+                    </div>
+                    {instructorMaster && (
+                      <Link
+                        to={`/book/course/${course.id}?masterId=${instructorMaster.id}`}
+                        className="inline-block mt-2 text-sm font-medium text-[#009B00] hover:underline"
+                      >
+                        Записаться к этому преподавателю
+                      </Link>
+                    )}
                   </div>
-                  {instructorMaster && (
-                    <Link
-                      to={`/book/course/${course.id}?masterId=${instructorMaster.id}`}
-                      className="inline-block mt-2 text-sm font-medium text-[#009B00] hover:underline"
-                    >
-                      Записаться к этому преподавателю
-                    </Link>
-                  )}
                 </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-4">
+                  {course.instructor.specialization}
+                </p>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-4">
-                {course.instructor.specialization}
-              </p>
-            </div>
+            )}
 
             {/* Bonuses */}
             <div className="bg-gradient-to-br from-[#009B00] to-[#89E689] text-white rounded-2xl p-6">

@@ -1,35 +1,26 @@
 /**
- * Первичные пользователи (мок-аккаунты для разработки).
- * В продакшене пароли должны хешироваться через bcrypt.
+ * Пользователи: 1 админ, 6 грумеров (под мастеров из mockData), 4 клиента.
+ * Пароль для всех: 123456
  */
+import bcrypt from 'bcrypt';
 
 export const seed = async function (knex) {
-  await knex('users').del();
+  // Сначала очищаем users и все таблицы, ссылающиеся на users (FK), иначе del() упадёт при повторном запуске сидов
+  await knex.raw('TRUNCATE TABLE users CASCADE');
+
+  const passwordHash = await bcrypt.hash('123456', 10);
 
   await knex('users').insert([
-    {
-      email: 'admin@groom.ru',
-      password_hash: '$2a$10$placeholder', // заменить на bcrypt.hash('123456', 10)
-      name: 'Админ',
-      phone: null,
-      role: 'admin',
-      created_by: null,
-    },
-    {
-      email: 'groomer@groom.ru',
-      password_hash: '$2a$10$placeholder',
-      name: 'Грумер',
-      phone: null,
-      role: 'groomer',
-      created_by: null,
-    },
-    {
-      email: 'maria@example.com',
-      password_hash: null,
-      name: 'Мария',
-      phone: null,
-      role: 'client',
-      created_by: null,
-    },
+    { email: 'admin@groom.ru', password_hash: passwordHash, name: 'Администратор', phone: '+7 (995) 020-50-13', role: 'admin', created_by: null },
+    { email: 'anna@groom.ru', password_hash: passwordHash, name: 'Анна Петрова', phone: '+7 (999) 111-11-01', role: 'groomer', created_by: null },
+    { email: 'maria@groom.ru', password_hash: passwordHash, name: 'Мария Иванова', phone: '+7 (999) 111-11-02', role: 'groomer', created_by: null },
+    { email: 'ivan@groom.ru', password_hash: passwordHash, name: 'Иван Соколов', phone: '+7 (999) 111-11-03', role: 'groomer', created_by: null },
+    { email: 'elena@groom.ru', password_hash: passwordHash, name: 'Елена Смирнова', phone: '+7 (999) 111-11-04', role: 'groomer', created_by: null },
+    { email: 'dmitry@groom.ru', password_hash: passwordHash, name: 'Дмитрий Волков', phone: '+7 (999) 111-11-05', role: 'groomer', created_by: null },
+    { email: 'olga@groom.ru', password_hash: passwordHash, name: 'Ольга Козлова', phone: '+7 (999) 111-11-06', role: 'groomer', created_by: null },
+    { email: 'maria@example.com', password_hash: passwordHash, name: 'Мария Клиентова', phone: '+7 (999) 222-22-01', role: 'client', created_by: null },
+    { email: 'elena.s@example.com', password_hash: passwordHash, name: 'Елена Соколова', phone: '+7 (999) 222-22-02', role: 'client', created_by: null },
+    { email: 'alexey@example.com', password_hash: passwordHash, name: 'Алексей Петров', phone: '+7 (999) 222-22-03', role: 'client', created_by: null },
+    { email: 'irina@example.com', password_hash: passwordHash, name: 'Ирина Новикова', phone: '+7 (999) 222-22-04', role: 'client', created_by: null },
   ]);
 };

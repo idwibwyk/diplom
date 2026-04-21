@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Filter, Clock, DollarSign, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/app/context/AuthContext';
 
 const COLUMNS = [
   { id: 'today', title: 'Записи на сегодня', color: 'bg-blue-500/20 border-blue-500/50' },
@@ -31,20 +32,30 @@ const MOCK_TASKS: Task[] = [
   { id: '4', petName: 'Зефирка', breed: 'Пудель', service: 'Креативная стрижка', time: '16:00', master: 'Иван Соколов', petPhoto: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=200', animalType: 'dog' },
 ];
 
-const initialBoard: Record<ColId, string[]> = {
-  today: ['1', '2', '3', '4'],
-  progress: [],
-  done: [],
-  moved: [],
-};
-
 export function GroomerBoardPage() {
+  const { user } = useAuth();
+  const groomerTasks = useMemo(() => {
+    if (!user?.name) return [];
+    return MOCK_TASKS.filter((t) => t.master === user.name);
+  }, [user?.name]);
+  const groomerTaskIds = groomerTasks.map((t) => t.id);
+
+  const initialBoard: Record<ColId, string[]> = {
+    today: groomerTaskIds,
+    progress: [],
+    done: [],
+    moved: [],
+  };
+
   const [board, setBoard] = useState<Record<ColId, string[]>>(initialBoard);
-  const [filterMaster, setFilterMaster] = useState<string>('all');
   const [filterAnimal, setFilterAnimal] = useState<'all' | 'dog' | 'cat'>('all');
   const [filterUrgent, setFilterUrgent] = useState(false);
 
-  const tasksMap = Object.fromEntries(MOCK_TASKS.map((t) => [t.id, t])) as Record<string, Task>;
+  useEffect(() => {
+    setBoard({ today: groomerTaskIds, progress: [], done: [], moved: [] });
+  }, [groomerTaskIds.join(',')]);
+
+  const tasksMap = Object.fromEntries(groomerTasks.map((t) => [t.id, t])) as Record<string, Task>;
 
   const moveTask = (taskId: string, toCol: ColId) => {
     setBoard((prev) => {
@@ -62,7 +73,6 @@ export function GroomerBoardPage() {
     return ids.filter((id) => {
       const t = tasksMap[id];
       if (!t) return false;
-      if (filterMaster !== 'all' && t.master !== filterMaster) return false;
       if (filterAnimal !== 'all' && t.animalType !== filterAnimal) return false;
       if (filterUrgent && !t.urgent) return false;
       return true;
@@ -108,16 +118,6 @@ export function GroomerBoardPage() {
             <Filter className="w-5 h-5" />
             <span className="font-medium">Фильтры:</span>
           </div>
-          <select
-            value={filterMaster}
-            onChange={(e) => setFilterMaster(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
-          >
-            <option value="all">Все мастера</option>
-            {Array.from(new Set(MOCK_TASKS.map((t) => t.master))).map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
           <select
             value={filterAnimal}
             onChange={(e) => setFilterAnimal(e.target.value as 'all' | 'dog' | 'cat')}

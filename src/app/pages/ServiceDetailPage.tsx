@@ -1,69 +1,111 @@
-import { useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useParams, Link } from 'react-router-dom';
-import { Clock, DollarSign, AlertTriangle, CheckCircle, Send, Star, Calendar } from 'lucide-react';
+import { Clock, DollarSign, AlertTriangle, CheckCircle, Send, Star, Calendar, Loader2, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as Accordion from '@radix-ui/react-accordion';
-import { services as allServices, masters } from '@/app/data/mockData';
+import { useEntity } from '@/app/hooks';
 import { ContactForm } from '@/app/components/ContactForm';
 import { FavoriteButton } from '@/app/components/FavoriteButton';
+
+type ServiceFromApi = { id: number; name: string; category: string; type: string; price: number; duration: string; duration_minutes?: number | null; description: string | null; image: string | null; breed: string | null; price_range: string | null; loyalty_points?: number | null };
+type MasterFromApi = { id: number; full_name: string; image: string | null; rating: number | null };
 
 export function ServiceDetailPage() {
   const { id } = useParams();
   const [question, setQuestion] = useState('');
+  const [beforeAfterIndex, setBeforeAfterIndex] = useState(0);
+  const serviceId = id && /^\d+$/.test(id) ? parseInt(id, 10) : null;
+  const { item: serviceData, list: servicesList, loadingItem, loadingItemError } = useEntity<ServiceFromApi>('services', {
+    fetchListOnMount: true,
+    listParams: { limit: 100 },
+    id: serviceId,
+    fetchItemOnMount: !!serviceId,
+    enabled: !!serviceId,
+  });
+  const { list: mastersList } = useEntity<MasterFromApi>('masters', { fetchListOnMount: true, listParams: { limit: 50 } });
+  const { list: masterServicesList } = useEntity<{ master_id: number; service_id: number }>('master_services', {
+    fetchListOnMount: true,
+    listParams: { limit: 200, ...(serviceId != null ? { service_id: serviceId } : {}) },
+  });
 
-  // Get service from data
-  const serviceData = allServices.find((s) => s.id === parseInt(id || '1'));
-  
-  const service = serviceData ? {
-    ...serviceData,
-    stressLevel: serviceData.category === 'cats' ? 3 : serviceData.category === 'other' ? 1 : 2,
-    whatIncluded: [
+  const similarServices = useMemo(() => {
+    if (!serviceData || !servicesList.length) return [];
+    return servicesList
+      .filter((s) => s.id !== serviceData.id && (s.category === serviceData.category || s.type === serviceData.type))
+      .slice(0, 3);
+  }, [serviceData, servicesList]);
+
+  const service = useMemo(() => {
+    if (!serviceData) {
+      return {
+        id: 0,
+        name: 'Услуга не найдена',
+        price: 0,
+        duration: '0',
+        duration_minutes: 0,
+        stressLevel: 1,
+        image: '/pictures/hero-section groom room services.jpg',
+        description: 'Услуга не найдена',
+        whatIncluded: [] as string[],
+        contraindications: [] as string[],
+        preparation: [] as string[],
+        products: [] as string[],
+        beforeAfter: [] as { before: string; after: string }[],
+      };
+    }
+    const d = serviceData;
+    const stressLevel = d.category === 'cats' ? 3 : d.category === 'other' ? 1 : 2;
+    const whatIncluded = [
       'Консультация мастера',
       'Мытье профессиональной косметикой',
       'Сушка и укладка',
-      serviceData.type === 'grooming' ? 'Стрижка по стандарту породы или индивидуальный дизайн' : 'Профессиональная обработка',
-      serviceData.type !== 'nail' ? 'Стрижка когтей' : '',
-      serviceData.category === 'dogs' || serviceData.category === 'cats' ? 'Чистка ушей' : '',
-      serviceData.category === 'dogs' ? 'Обработка подушечек лап' : '',
-    ].filter(Boolean),
-    contraindications: [
+      d.type === 'grooming' ? 'Стрижка по стандарту породы или индивидуальный дизайн' : 'Профессиональная обработка',
+      d.type !== 'nail' ? 'Стрижка когтей' : '',
+      (d.category === 'dogs' || d.category === 'cats') ? 'Чистка ушей' : '',
+      d.category === 'dogs' ? 'Обработка подушечек лап' : '',
+    ].filter(Boolean);
+    const contraindications = [
       'Острые инфекционные заболевания',
       'Открытые раны и воспаления на коже',
-      serviceData.id === 27 ? '' : 'Агрессивное поведение без предупреждения (доплата 300₽)',
+      d.id === 27 ? '' : 'Агрессивное поведение без предупреждения (доплата 300₽)',
       'Беременность на последних сроках (требуется консультация ветеринара)',
-    ].filter(Boolean),
-    preparation: [
+    ].filter(Boolean);
+    const preparation = [
       'Не кормите питомца за 2-3 часа до процедуры',
-      serviceData.category === 'dogs' ? 'Прогуляйте собаку перед визитом' : '',
+      d.category === 'dogs' ? 'Прогуляйте собаку перед визитом' : '',
       'Принесите любимую игрушку для комфорта',
       'Сообщите о хронических заболеваниях',
-    ].filter(Boolean),
-    products: [
-      'Шампунь Bio-Groom (США)',
-      'Кондиционер Isle of Dogs',
-      'Спрей для блеска Show Premium',
-      'Профессиональные ножницы Kenchii',
-    ],
-    beforeAfter: [
-      {
-        before: serviceData.image,
-        after: serviceData.image,
-      },
-    ],
-  } : {
-    id: 1,
-    name: 'Услуга не найдена',
-    price: 0,
-    duration: '0',
-    stressLevel: 1,
-    image: 'https://images.unsplash.com/photo-1648643118660-efb8eb0aea93?w=1200',
-    description: 'Услуга не найдена',
-    whatIncluded: [],
-    contraindications: [],
-    preparation: [],
-    products: [],
-    beforeAfter: [],
-  };
+    ].filter(Boolean);
+    const img = d.image || '/pictures/hero-section groom room services.jpg';
+    const beforeImg = d.category === 'dogs' ? '/pictures/Gallery services - Yorkshire Terrier haircut.jpg' : d.category === 'cats' ? '/pictures/Gallery services - Cat grooming.jpg' : img;
+    const afterImg = d.category === 'dogs' ? '/pictures/Yorkshire Terrier (York).jpg' : d.category === 'cats' ? '/pictures/Cat haircut.jpg' : img;
+    const productsByType: Record<string, string[]> = {
+      grooming: ['Шампунь Bio-Groom (США)', 'Кондиционер Isle of Dogs', 'Спрей для блеска Show Premium', 'Профессиональные ножницы Kenchii', 'Когтерез'],
+      bathing: ['Шампунь гипоаллергенный', 'Кондиционер для шерсти', 'Сушка профессиональным феном'],
+      nail: ['Когтерез гильотинный', 'Пилка для когтей', 'Антисептик'],
+      extra: ['Седативные методы по показаниям', 'Доп. время на процедуру'],
+    };
+    const prepByCategory: Record<string, string[]> = {
+      dogs: ['Не кормите питомца за 2-3 часа до процедуры', 'Прогуляйте собаку перед визитом', 'Принесите любимую игрушку для комфорта', 'Сообщите о хронических заболеваниях'],
+      cats: ['Не кормите за 2-3 часа до визита', 'Перевозка в переноске', 'Сообщите о характере питомца', 'При необходимости — консультация ветеринара'],
+      other: ['Не кормите за 2-3 часа', 'Сообщите о хронических заболеваниях', 'Принесите привычные аксессуары'],
+    };
+    return {
+      ...d,
+      stressLevel,
+      whatIncluded,
+      contraindications,
+      preparation: prepByCategory[d.category] || preparation,
+      products: productsByType[d.type] || productsByType.grooming,
+      beforeAfter: (d.category === 'dogs' ? [{ before: beforeImg, after: afterImg }, { before: '/pictures/Gallery services - Pomeranian haircut.jpg', after: '/pictures/Pomeranian (Pomeranian, German miniature).jpg' }] : [{ before: beforeImg, after: afterImg }]).filter(Boolean),
+    };
+  }, [serviceData]);
+
+  const masters = useMemo(() => {
+    if (!serviceId) return [];
+    const masterIdsForService = new Set(masterServicesList.filter((ms) => ms.service_id === serviceId).map((ms) => ms.master_id));
+    return mastersList.filter((m) => masterIdsForService.has(m.id));
+  }, [mastersList, masterServicesList, serviceId]);
 
   const faqItems = [
     {
@@ -104,6 +146,21 @@ export function ServiceDetailPage() {
     setQuestion('');
   };
 
+  if (serviceId && loadingItem) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#4A90E2] animate-spin" />
+      </div>
+    );
+  }
+  if (serviceId && loadingItemError) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <p className="text-red-500">{loadingItemError}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero */}
@@ -119,7 +176,7 @@ export function ServiceDetailPage() {
         <div className="container mx-auto px-4 h-full flex items-end pb-12">
           <div className="text-white">
             <h1 className="text-5xl font-bold mb-4">{service.name}</h1>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 flex-wrap">
               <div className="flex items-center gap-2">
                 <Clock className="w-6 h-6" />
                 <span className="text-xl">{service.duration}</span>
@@ -128,6 +185,12 @@ export function ServiceDetailPage() {
                 <DollarSign className="w-6 h-6" />
                 <span className="text-xl">{service.price}₽</span>
               </div>
+              {(service as ServiceFromApi).loyalty_points != null && (service as ServiceFromApi).loyalty_points! > 0 && (
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-xl">
+                  <Heart className="w-5 h-5 fill-current" />
+                  <span className="text-lg font-medium">+{(service as ServiceFromApi).loyalty_points} лапок за запись</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -140,9 +203,19 @@ export function ServiceDetailPage() {
             {/* Description */}
             <section>
               <h2 className="text-3xl font-bold mb-6">Описание услуги</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
                 {service.description}
               </p>
+              {service.breed && (
+                <div className="bg-[#4A90E2]/5 rounded-xl p-6 border-l-4 border-[#4A90E2]">
+                  <h4 className="font-bold text-[#4A90E2] mb-2">Порода</h4>
+                  <p className="text-gray-700 dark:text-gray-300">{service.breed}</p>
+                </div>
+              )}
+              <div className="mt-6 prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
+                <p>Профессиональный груминг — это не просто стрижка, а комплексный уход за шерстью, кожей и когтями вашего питомца. Мы используем только качественную косметику премиум-класса и стерильные инструменты. Каждый мастер проходит обучение и регулярно повышает квалификацию.</p>
+                <p className="mt-4">Перед процедурой мы проводим осмотр питомца и консультируем по уходу. После визита вы получите рекомендации по домашнему уходу, чтобы сохранить результат как можно дольше.</p>
+              </div>
             </section>
 
             {/* Stress Level */}
@@ -183,34 +256,65 @@ export function ServiceDetailPage() {
               </div>
             </section>
 
-            {/* Before/After */}
+            {/* Before/After — интерактивная галерея */}
             <section>
               <h3 className="text-2xl font-bold mb-6">До и После</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                {service.beforeAfter.map((pair, index) => (
-                  <div key={index} className="space-y-4">
-                    <div>
-                      <p className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                        До
-                      </p>
-                      <img
-                        src={pair.before}
-                        alt="До"
-                        className="w-full h-64 object-cover rounded-xl"
-                      />
+              <div className="relative">
+                <AnimatePresence mode="wait">
+                  {service.beforeAfter.length > 0 && (() => {
+                    const pair = service.beforeAfter[beforeAfterIndex % service.beforeAfter.length];
+                    return (
+                      <motion.div
+                        key={beforeAfterIndex}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid md:grid-cols-2 gap-6"
+                      >
+                        <div>
+                          <p className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">До</p>
+                          <img src={pair.before} alt="До" className="w-full h-72 object-cover rounded-xl shadow-lg" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">После</p>
+                          <img src={pair.after} alt="После" className="w-full h-72 object-cover rounded-xl shadow-lg" />
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
+                </AnimatePresence>
+                {service.beforeAfter.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setBeforeAfterIndex((i) => (i - 1 + service.beforeAfter.length) % service.beforeAfter.length)}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:translate-x-0 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-xl border-2 border-[#4A90E2] flex items-center justify-center hover:bg-[#4A90E2] hover:text-white transition-colors z-10"
+                      aria-label="Предыдущее"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBeforeAfterIndex((i) => (i + 1) % service.beforeAfter.length)}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-0 w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-xl border-2 border-[#4A90E2] flex items-center justify-center hover:bg-[#4A90E2] hover:text-white transition-colors z-10"
+                      aria-label="Следующее"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                    <div className="flex justify-center gap-2 mt-4">
+                      {service.beforeAfter.map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setBeforeAfterIndex(i)}
+                          className={`w-2.5 h-2.5 rounded-full transition-colors ${i === beforeAfterIndex % service.beforeAfter.length ? 'bg-[#4A90E2] scale-125' : 'bg-gray-300 dark:bg-gray-600'}`}
+                          aria-label={`Слайд ${i + 1}`}
+                        />
+                      ))}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">
-                        После
-                      </p>
-                      <img
-                        src={pair.after}
-                        alt="После"
-                        className="w-full h-64 object-cover rounded-xl"
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </>
+                )}
               </div>
             </section>
 
@@ -317,7 +421,7 @@ export function ServiceDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Booking Card */}
-            <div className="sticky top-6 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl border-2 border-[#4A90E2]">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl border-2 border-[#4A90E2]">
               <div className="text-center mb-6">
                 <p className="text-gray-600 dark:text-gray-300 mb-2">Стоимость услуги</p>
                 <p className="text-4xl font-bold text-[#4A90E2]">{service.price}₽</p>
@@ -341,21 +445,29 @@ export function ServiceDetailPage() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
               <h4 className="font-bold mb-4">Наши мастера</h4>
               <div className="space-y-3">
-                {masters.slice(0, 4).map((m) => (
+                {masters.slice(0, 6).map((m) => (
                   <div key={m.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                    <img src={m.image} alt={m.name} className="w-12 h-12 rounded-full object-cover" />
+                    <img src={m.image || '/pictures/Groomer Anna.jpg'} alt={m.full_name} className="w-12 h-12 rounded-full object-cover" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium">{m.name}</p>
+                      <p className="font-medium">{m.full_name}</p>
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm">{m.rating}</span>
+                        <span className="text-sm">{m.rating != null ? Number(m.rating).toFixed(1) : '—'}</span>
                       </div>
-                      <Link
-                        to={`/book/service/${id}?masterId=${m.id}`}
-                        className="inline-block mt-2 text-sm font-medium text-[#4A90E2] hover:underline"
-                      >
-                        Записаться к этому мастеру
-                      </Link>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Link
+                          to={`/masters/${m.id}`}
+                          className="text-sm font-medium text-[#4A90E2] hover:underline"
+                        >
+                          Подробнее
+                        </Link>
+                        <Link
+                          to={`/book/service/${service.id}?masterId=${m.id}`}
+                          className="text-sm font-medium text-[#4A90E2] hover:underline"
+                        >
+                          Записаться к этому мастеру
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -366,16 +478,22 @@ export function ServiceDetailPage() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
               <h4 className="font-bold mb-4">Похожие услуги</h4>
               <div className="space-y-3">
-                {['СПА-уход', 'Экспресс-груминг'].map((service, index) => (
-                  <Link
-                    key={index}
-                    to={`/services/${index + 2}`}
-                    className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-[#4A90E2]/10 transition-colors"
-                  >
-                    <p className="font-medium">{service}</p>
-                    <p className="text-sm text-gray-500">от 1500₽</p>
-                  </Link>
-                ))}
+                {similarServices.length
+                  ? similarServices.map((s) => (
+                      <Link
+                        key={s.id}
+                        to={`/services/${s.id}`}
+                        className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-[#4A90E2]/10 transition-colors"
+                      >
+                        <p className="font-medium">{s.name}</p>
+                        <p className="text-sm text-gray-500">{s.price_range ?? `от ${s.price}₽`}</p>
+                      </Link>
+                    ))
+                  : (
+                      <Link to="/services/list" className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-[#4A90E2]/10 transition-colors text-[#4A90E2]">
+                        Все услуги
+                      </Link>
+                    )}
               </div>
             </div>
           </div>

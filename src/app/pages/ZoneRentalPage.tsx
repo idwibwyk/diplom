@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Scissors, Clock, Calendar, MapPin, Mail, CheckCircle, Sparkles, Wifi } from 'lucide-react';

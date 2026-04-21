@@ -24,7 +24,7 @@ const SIDEBAR = [
   { to: '/book/service', label: 'Записаться на услугу', icon: CreditCard },
   { to: '/services/list', label: 'Прайс-лист', icon: CreditCard },
   { to: '/services/blog', label: 'Блог', icon: FileText },
-  { to: '/education', label: 'Обучение', icon: BookOpen },
+  { to: '/courses', label: 'Курсы', icon: BookOpen },
 ];
 
 export function ClientDashboardLayout() {

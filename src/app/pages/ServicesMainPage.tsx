@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Calendar, Star, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PriceCalculator } from '@/app/components/PriceCalculator';
@@ -8,6 +9,7 @@ import { ContactForm } from '@/app/components/ContactForm';
 import { useState, useEffect } from 'react';
 
 export function ServicesMainPage() {
+  const navigate = useNavigate();
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
   const serviceReviews = reviews.filter((r: any) => r.type === 'service' || !r.type);
@@ -81,18 +83,22 @@ export function ServicesMainPage() {
             {masters.slice(0, 6).map((master, index) => (
               <motion.div
                 key={master.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/masters/${master.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/masters/${master.id}`)}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -10 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl"
+                className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl cursor-pointer hover:shadow-2xl transition-shadow h-full group"
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
                     src={master.image}
                     alt={master.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-4 right-4 bg-[#4A90E2] text-white px-4 py-2 rounded-full font-bold flex items-center gap-2">
                     <Star className="w-4 h-4 fill-white" />
@@ -100,14 +106,15 @@ export function ServicesMainPage() {
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-2xl font-bold mb-2">{master.name}</h3>
+                  <h3 className="text-2xl font-bold mb-2 group-hover:text-[#4A90E2] transition-colors">{master.name}</h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-4">{master.specialization}</p>
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                     <Sparkles className="w-4 h-4" />
-                    <span>Опыт: {master.experience}</span>
+                    <span>Опыт: {master.experience} лет</span>
                   </div>
                   <Link
                     to={`/book/service?masterId=${master.id}`}
+                    onClick={(e) => e.stopPropagation()}
                     className="inline-flex items-center gap-2 text-[#4A90E2] font-bold hover:underline"
                   >
                     <Calendar className="w-4 h-4" />

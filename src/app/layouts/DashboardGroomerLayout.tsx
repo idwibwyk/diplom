@@ -9,6 +9,7 @@ import {
   MessageCircle,
   TrendingUp,
 } from 'lucide-react';
+import React from 'react';
 
 const SIDEBAR = [
   { to: '/dashboard-groomer', label: 'Главная', icon: LayoutDashboard },
@@ -17,7 +18,7 @@ const SIDEBAR = [
   { to: '/dashboard-groomer/teaching', label: 'Обучение', icon: GraduationCap },
   { to: '/dashboard-groomer/portfolio', label: 'Портфолио работ', icon: Image },
   { to: '/dashboard-groomer/reviews', label: 'Отзывы и рейтинг', icon: Star },
-  { to: '/dashboard-groomer/chat', label: 'Чат с администратором', icon: MessageCircle },
+  { to: '/dashboard-groomer/chat', label: 'Заметки грумера', icon: MessageCircle },
   { to: '/dashboard-groomer/stats', label: 'Статистика доходов', icon: TrendingUp },
 ];
 

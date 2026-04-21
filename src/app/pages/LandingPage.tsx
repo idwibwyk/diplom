@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import React from 'react';
 import { Sparkles, Heart, Award, Users, ArrowRight, Star, Calendar, Clock, Shield, Smile, DollarSign, Phone, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as Accordion from '@radix-ui/react-accordion';
 import { faqItems, reviews, services, courses } from '@/app/data/mockData';
@@ -61,34 +62,22 @@ export function LandingPage() {
 
   const milestones = [
     {
-      year: '2016',
+      year: '2023',
       title: 'Открытие салона',
-      description: 'Мы начали свой путь с небольшого салона и большой мечты - создать место, где каждый питомец будет чувствовать себя любимым.',
+      description: 'Мы начали свой путь с салона MARS GROOM и большой мечты — создать место, где каждый питомец будет чувствовать себя любимым.',
       icon: Sparkles,
-    },
-    {
-      year: '2018',
-      title: 'Первая школа груминга',
-      description: 'Открыли первую обучающую программу для будущих грумеров. За год обучили 20 специалистов.',
-      icon: Users,
-    },
-    {
-      year: '2020',
-      title: '1000-й клиент',
-      description: 'Достигли важной вехи - 1000 довольных клиентов. Это был важный момент в нашей истории.',
-      icon: Heart,
-    },
-    {
-      year: '2022',
-      title: 'Признание в индустрии',
-      description: 'Получили награду "Лучший груминг-салон года" от профессионального сообщества.',
-      icon: Award,
     },
     {
       year: '2024',
-      title: 'Расширение',
-      description: 'Открыли филиал и запустили онлайн-обучение. Теперь наши курсы доступны по всей стране.',
-      icon: Sparkles,
+      title: 'Первая школа груминга',
+      description: 'Открыли обучающую программу для будущих грумеров. За год обучили десятки специалистов.',
+      icon: Users,
+    },
+    {
+      year: '2025',
+      title: 'Признание в индустрии',
+      description: 'Получили награду «Лучший груминг-салон года» от профессионального сообщества.',
+      icon: Award,
     },
     {
       year: '2026',
@@ -126,7 +115,7 @@ export function LandingPage() {
               MARS GROOM
             </h1>
             <p className="text-2xl md:text-3xl mb-8 max-w-3xl mx-auto">
-              Профессиональный груминг и обучение грумеров с 2016 года
+              Профессиональный груминг и обучение грумеров с 2023 года
             </p>
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
               <div className="flex flex-col gap-4">
@@ -267,38 +256,14 @@ export function LandingPage() {
             <h2 className="text-5xl font-bold mb-6">Нас выбирают за...</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto justify-items-center">
             {[
-              {
-                icon: Award,
-                title: 'Профессионализм',
-                description: 'Мы предоставляем комплексные услуги по уходу за собаками и кошками любых пород и размеров.',
-              },
-              {
-                icon: Shield,
-                title: 'Качество',
-                description: 'Мы используем безопасные и экологичные шампуни, кондиционеры и средства гигиены.',
-              },
-              {
-                icon: Smile,
-                title: 'Индивидуальность',
-                description: 'Мы обеспечим вашему питомцу комфортные и приятные условия с индивидуальным подходом.',
-              },
-              {
-                icon: Clock,
-                title: 'Доступность',
-                description: 'Для вашего удобства наши салоны работают 7 дней в неделю без перерывов и выходных.',
-              },
-              {
-                icon: Heart,
-                title: 'Заботу',
-                description: 'Мы позаботимся о вашем питомце и проведем все необходимые процедуры, пока вы занимаетесь своими делами.',
-              },
-              {
-                icon: Phone,
-                title: 'Отзывчивость',
-                description: 'Мы с радостью проконсультируем вас по вопросам ухода за вашим питомцем.',
-              },
+              { icon: Award, title: 'Профессионализм', description: 'Мы предоставляем комплексные услуги по уходу за собаками и кошками любых пород и размеров.' },
+              { icon: Shield, title: 'Качество', description: 'Мы используем безопасные и экологичные шампуни, кондиционеры и средства гигиены.' },
+              { icon: Smile, title: 'Индивидуальность', description: 'Мы обеспечим вашему питомцу комфортные и приятные условия с индивидуальным подходом.' },
+              { icon: Clock, title: 'Доступность', description: 'Для вашего удобства наши салоны работают 7 дней в неделю без перерывов и выходных.' },
+              { icon: Heart, title: 'Заботу', description: 'Мы позаботимся о вашем питомце и проведем все необходимые процедуры, пока вы занимаетесь своими делами.' },
+              { icon: Phone, title: 'Отзывчивость', description: 'Мы с радостью проконсультируем вас по вопросам ухода за вашим питомцем.' },
             ].map((item, index) => {
               const Icon = item.icon;
               return (
@@ -309,15 +274,17 @@ export function LandingPage() {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -10, scale: 1.02 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl cursor-pointer group"
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl cursor-pointer group flex flex-col items-center justify-center text-center w-full max-w-md"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#53C9CA] to-[#9ADFE0] rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <h3 className="text-2xl font-bold mb-4 mt-0">{item.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                  <div className="w-16 h-16 mt-6 bg-gradient-to-br from-[#53C9CA] to-[#9ADFE0] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
                     <Icon className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {item.description}
-                  </p>
                 </motion.div>
               );
             })}

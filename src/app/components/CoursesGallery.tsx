@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ZoomIn, Play, Pause } from 'lucide-react';
 

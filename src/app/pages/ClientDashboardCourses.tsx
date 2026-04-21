@@ -22,10 +22,10 @@ const SIDEBAR_LINKS = [
   { to: '/courses/schedule', label: 'Расписание', icon: Calendar },
   { to: '/book/course', label: 'Записаться на курс', icon: Calendar },
   { to: '/courses/list', label: 'Все курсы', icon: GraduationCap },
-  { to: '/library', label: 'Библиотека знаний', icon: Library },
+  { to: '/courses/library', label: 'Библиотека знаний', icon: Library },
   { to: '/courses/blog', label: 'Блог', icon: FileText },
   { to: '/courses/reviews', label: 'Отзывы', icon: Star },
-  { to: '/courses/education', label: 'Сведения об организации', icon: FileText },
+  { to: '/licenses', label: 'Сведения об организации', icon: FileText },
 ];
 
 const MOCK_MY_COURSES = [

@@ -36,7 +36,7 @@ export function ChatBot() {
   const getChatColor = () => {
     if (location.pathname.startsWith('/services')) {
       return 'from-[#4A90E2] to-[#9EC3EF]'; // Голубой для услуг
-    } else if (location.pathname.startsWith('/courses') || location.pathname.startsWith('/library')) {
+    } else if (location.pathname.startsWith('/courses') || location.pathname.startsWith('/courses/library')) {
       return 'from-[#40AB40] to-[#89E689]'; // Зеленый для курсов
     } else {
       return 'from-[#53C9CA] to-[#9ADFE0]'; // Бирюзовый для главной
@@ -164,7 +164,7 @@ export function ChatBot() {
                   placeholder="Напишите ваш вопрос..."
                   className={`flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 ${
                     location.pathname.startsWith('/services') ? 'focus:ring-[#4A90E2]' :
-                    location.pathname.startsWith('/courses') || location.pathname.startsWith('/library') ? 'focus:ring-[#40AB40]' :
+                    location.pathname.startsWith('/courses') || location.pathname.startsWith('/courses/library') ? 'focus:ring-[#40AB40]' :
                     'focus:ring-[#53C9CA]'
                   }`}
                 />

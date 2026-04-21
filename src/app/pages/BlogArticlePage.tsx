@@ -1,196 +1,74 @@
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { useParams, Link } from 'react-router-dom';
-import { Calendar, User, ArrowRight, Clock, Share2 } from 'lucide-react';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import { Calendar, User, ArrowRight, Clock, Loader2 } from 'lucide-react';
+import { useEntity } from '@/app/hooks';
 
-interface BlogPost {
-  id: number;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  date: string;
-  category: string;
-  readTime: string;
-  image: string;
-}
+type BlogPostRow = { id: number; title: string; excerpt: string | null; content: string | null; author_id: number | null; category: string | null; read_time: string | null; image: string | null; published_at: string | null };
+type MasterRow = { id: number; full_name: string };
 
 export function BlogArticlePage() {
-  const { id, type } = useParams<{ id: string; type?: string }>();
-  const isServicesBlog = type === 'services' || window.location.pathname.includes('/services/blog');
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const pathname = location.pathname;
+  const isServicesBlog = pathname.includes('/services/blog');
+  const isCoursesBlog = pathname.includes('/courses/blog');
+  const backTo = isServicesBlog ? '/services/blog' : isCoursesBlog ? '/courses/blog' : '/blog';
 
-  // Mock blog posts data - in real app this would come from an API
-  const servicesPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: 'Как выбрать правильную стрижку для вашей собаки',
-      excerpt: 'Руководство по выбору стрижки в зависимости от породы, типа шерсти и образа жизни питомца.',
-      content: `
-        <h2>Введение</h2>
-        <p>Выбор правильной стрижки для вашей собаки - это не просто вопрос эстетики, но и здоровья питомца. Правильно подобранная стрижка поможет собаке чувствовать себя комфортно в любое время года и предотвратит многие проблемы с кожей и шерстью.</p>
-        
-        <h2>Факторы, влияющие на выбор стрижки</h2>
-        <h3>Тип шерсти</h3>
-        <p>Разные типы шерсти требуют разных подходов к стрижке:</p>
-        <ul>
-          <li><strong>Длинная шерсть</strong> (йоркширские терьеры, ши-тцу) - требует регулярной стрижки каждые 4-6 недель</li>
-          <li><strong>Курчавая шерсть</strong> (пудели, бишон-фризе) - нуждается в профессиональной стрижке по стандарту породы</li>
-          <li><strong>Жесткая шерсть</strong> (цвергшнауцеры, терьеры) - требует тримминга вместо стрижки</li>
-        </ul>
-        
-        <h3>Образ жизни</h3>
-        <p>Активные собаки, которые много времени проводят на улице, нуждаются в более практичных стрижках, которые не будут мешать движению и легко содержаться в чистоте.</p>
-        
-        <h3>Сезонность</h3>
-        <p>В жаркое время года многие владельцы предпочитают более короткие стрижки, чтобы помочь питомцу переносить высокие температуры. Однако важно помнить, что шерсть также защищает от солнечных ожогов.</p>
-        
-        <h2>Популярные типы стрижек</h2>
-        <h3>Выставочная стрижка</h3>
-        <p>Выполняется по стандарту породы и требует регулярного ухода. Подходит для собак, участвующих в выставках.</p>
-        
-        <h3>Гигиеническая стрижка</h3>
-        <p>Поддерживающая стрижка, которая сохраняет естественный вид собаки, но делает её более ухоженной. Идеальна для домашних любимцев.</p>
-        
-        <h3>Модельная стрижка</h3>
-        <p>Креативные стрижки с различными узорами и формами. Подходит для собак с густой шерстью и для особых случаев.</p>
-        
-        <h2>Рекомендации по уходу</h2>
-        <p>После стрижки важно поддерживать шерсть в хорошем состоянии:</p>
-        <ul>
-          <li>Регулярное расчесывание предотвращает образование колтунов</li>
-          <li>Использование качественных шампуней и кондиционеров</li>
-          <li>Защита от паразитов и регулярные осмотры кожи</li>
-        </ul>
-        
-        <h2>Заключение</h2>
-        <p>Правильно подобранная стрижка - это залог здоровья и комфорта вашего питомца. Обращайтесь к профессиональным грумерам, которые помогут выбрать оптимальный вариант для вашей собаки.</p>
-      `,
-      author: 'Анна Петрова',
-      date: '2026-01-15',
-      category: 'Уход',
-      readTime: '5 мин',
-      image: 'https://images.unsplash.com/photo-1648643118660-efb8eb0aea93?w=1200',
-    },
-    {
-      id: 2,
-      title: '10 советов по уходу за шерстью собаки между визитами к грумеру',
-      excerpt: 'Практические советы от наших мастеров о том, как поддерживать шерсть питомца в идеальном состоянии.',
-      content: `
-        <h2>Введение</h2>
-        <p>Регулярный уход за шерстью между визитами к грумеру поможет сохранить здоровье и красоту вашего питомца, а также продлить эффект от профессиональной стрижки.</p>
-        
-        <h2>Ежедневный уход</h2>
-        <h3>1. Регулярное расчесывание</h3>
-        <p>Расчесывание шерсти должно стать ежедневной привычкой. Это предотвращает образование колтунов, распределяет естественные масла по шерсти и стимулирует кровообращение кожи.</p>
-        
-        <h3>2. Выбор правильной расчески</h3>
-        <p>Используйте расческу, подходящую для типа шерсти вашей собаки. Для длинной шерсти лучше подходят щетки с длинными зубьями, для короткой - резиновые щетки или фурминаторы.</p>
-        
-        <h2>Еженедельные процедуры</h2>
-        <h3>3. Купание</h3>
-        <p>Частота купания зависит от породы и образа жизни. В среднем, собак купают раз в 2-4 недели, используя специальные шампуни для собак.</p>
-        
-        <h3>4. Очистка ушей</h3>
-        <p>Регулярная очистка ушей специальными лосьонами поможет предотвратить инфекции, особенно у собак с висячими ушами.</p>
-        
-        <h3>5. Стрижка когтей</h3>
-        <p>Когти нужно подстригать каждые 2-3 недели, чтобы они не мешали собаке при ходьбе и не причиняли дискомфорт.</p>
-        
-        <h2>Сезонный уход</h2>
-        <h3>6. Подготовка к линьке</h3>
-        <p>Во время линьки увеличивайте частоту расчесывания и используйте специальные инструменты для удаления выпавшей шерсти.</p>
-        
-        <h3>7. Защита от паразитов</h3>
-        <p>Регулярно используйте средства защиты от блох и клещей, особенно в теплый сезон.</p>
-        
-        <h2>Здоровье кожи и шерсти</h2>
-        <h3>8. Правильное питание</h3>
-        <p>Сбалансированное питание с достаточным количеством белков и жирных кислот омега-3 способствует здоровью шерсти.</p>
-        
-        <h3>9. Обработка проблемных участков</h3>
-        <p>Внимательно следите за состоянием кожи под шерстью. Покраснения, раздражения или выпадение шерсти требуют консультации ветеринара.</p>
-        
-        <h3>10. Регулярные осмотры</h3>
-        <p>Проводите регулярные осмотры кожи и шерсти на предмет ранок, паразитов или других проблем.</p>
-        
-        <h2>Заключение</h2>
-        <p>Регулярный домашний уход в сочетании с профессиональным грумингом обеспечит вашему питомцу здоровую и красивую шерсть круглый год.</p>
-      `,
-      author: 'Мария Иванова',
-      date: '2026-01-10',
-      category: 'Советы',
-      readTime: '7 мин',
-      image: 'https://images.unsplash.com/photo-1728448644193-34eb04460c95?w=1200',
-    },
-    // Add more posts as needed
-  ];
+  const postId = id ? parseInt(id, 10) : null;
+  const { item: postData, loadingItem, loadingItemError } = useEntity<BlogPostRow>('blog_posts', {
+    fetchListOnMount: false,
+    id: postId,
+    fetchItemOnMount: !!postId,
+    enabled: !!postId,
+  });
+  const { list: mastersList } = useEntity<MasterRow>('masters', { fetchListOnMount: true, listParams: { limit: 50 } });
 
-  const coursesPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: 'С чего начать обучение грумингу',
-      excerpt: 'Руководство для начинающих: первые шаги в профессии грумера, необходимые навыки и инструменты.',
-      content: `
-        <h2>Введение в профессию</h2>
-        <p>Груминг - это не просто стрижка животных, это искусство, требующее знаний, навыков и любви к животным. Если вы решили стать профессиональным грумером, этот гайд поможет вам сделать первые шаги.</p>
-        
-        <h2>Почему стоит выбрать груминг</h2>
-        <p>Профессия грумера открывает множество возможностей: от работы в салоне до открытия собственного бизнеса. Это творческая профессия, которая приносит радость и удовлетворение от работы с животными.</p>
-        
-        <h2>Первые шаги</h2>
-        <h3>1. Изучите основы</h3>
-        <p>Начните с изучения анатомии разных пород собак и кошек, типов шерсти и особенностей ухода за ними. Читайте специализированную литературу и смотрите обучающие видео.</p>
-        
-        <h3>2. Выберите курс обучения</h3>
-        <p>Профессиональные курсы дадут вам структурированные знания и практические навыки. Выбирайте курсы с опытными преподавателями и возможностью практики на реальных животных.</p>
-        
-        <h3>3. Приобретите базовые инструменты</h3>
-        <p>Для начала вам понадобятся: качественные ножницы, машинка для стрижки, расчески и щетки, фен и основное оборудование. Начните с базового набора и расширяйте его по мере обучения.</p>
-        
-        <h2>Необходимые навыки</h2>
-        <ul>
-          <li><strong>Технические навыки</strong> - умение работать с различными инструментами и техниками стрижки</li>
-          <li><strong>Знание пород</strong> - понимание стандартов пород и особенностей их стрижки</li>
-          <li><strong>Работа с животными</strong> - умение успокоить и контролировать питомца во время процедур</li>
-          <li><strong>Безопасность</strong> - знание техники безопасности для себя и животных</li>
-        </ul>
-        
-        <h2>Путь развития</h2>
-        <h3>Начальный уровень</h3>
-        <p>Начните с базовых курсов по грумингу собак. Освойте основные техники стрижки, мытья и сушки.</p>
-        
-        <h3>Продвинутый уровень</h3>
-        <p>Изучите выставочный груминг, работу с различными породами и специализированные техники.</p>
-        
-        <h3>Экспертный уровень</h3>
-        <p>Станьте мастером в конкретной области: груминг кошек, креативные стрижки, или работа с породами-чемпионами.</p>
-        
-        <h2>Практика</h2>
-        <p>Практика - ключ к успеху. Начните с практики на манекенах, затем переходите к работе с животными друзей и семьи. Накопив опыт, вы сможете работать с клиентскими питомцами.</p>
-        
-        <h2>Заключение</h2>
-        <p>Обучение грумингу - это долгий, но увлекательный путь. При правильном подходе и настойчивости вы сможете стать профессиональным грумером и построить успешную карьеру в этой области.</p>
-      `,
-      author: 'Анна Петрова',
-      date: '2026-01-15',
-      category: 'Обучение',
-      readTime: '6 мин',
-      image: 'https://images.unsplash.com/photo-1653150756437-41454967e9f5?w=1200',
-    },
-    // Add more posts as needed
-  ];
+  const authorName = useMemo(() => {
+    if (!postData?.author_id) return 'Команда Mars Groom';
+    const m = mastersList.find((x) => x.id === postData.author_id);
+    return m?.full_name ?? 'Команда Mars Groom';
+  }, [postData?.author_id, mastersList]);
 
-  const posts = isServicesBlog ? servicesPosts : coursesPosts;
-  const post = posts.find((p) => p.id === parseInt(id || '1'));
+  const post = useMemo(() => {
+    if (!postData) return null;
+    return {
+      id: postData.id,
+      title: postData.title,
+      excerpt: postData.excerpt ?? '',
+      content: postData.content ?? '<p>Содержание статьи.</p>',
+      author: authorName,
+      date: postData.published_at ?? '',
+      category: postData.category ?? 'Статья',
+      readTime: postData.read_time ?? '5 мин',
+      image: postData.image ?? (isServicesBlog ? '/pictures/hero-section groom room services.jpg' : '/pictures/hero-section groom room courses.jpg'),
+    };
+  }, [postData, authorName]);
+
+  if (postId && loadingItem) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#4A90E2] animate-spin" />
+      </div>
+    );
+  }
+  if (postId && loadingItemError) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 py-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-red-500 mb-4">{loadingItemError}</p>
+          <Link to={backTo} className="text-[#4A90E2] hover:underline">Вернуться к блогу</Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 py-24">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">Статья не найдена</h1>
-          <Link
-            to={isServicesBlog ? '/services/blog' : '/courses/blog'}
-            className="text-[#4A90E2] hover:underline"
-          >
+          <Link to={backTo} className="text-[#4A90E2] hover:underline">
             Вернуться к блогу
           </Link>
         </div>
@@ -200,7 +78,9 @@ export function BlogArticlePage() {
 
   const colorScheme = isServicesBlog
     ? { primary: '#4A90E2', secondary: '#9EC3EF' }
-    : { primary: '#40AB40', secondary: '#89E689' };
+    : isCoursesBlog
+    ? { primary: '#40AB40', secondary: '#89E689' }
+    : { primary: '#E56E9B', secondary: '#FFB3BA' };
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -218,7 +98,7 @@ export function BlogArticlePage() {
             transition={{ duration: 0.8 }}
           >
             <Link
-              to={isServicesBlog ? '/services/blog' : '/courses/blog'}
+              to={backTo}
               className="inline-flex items-center gap-2 mb-6 text-white hover:opacity-80 transition-opacity"
             >
               <ArrowRight className="w-5 h-5 rotate-180" />
@@ -230,14 +110,14 @@ export function BlogArticlePage() {
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">{post.title}</h1>
-            <div className="flex flex-wrap items-center gap-6 text-white/90">
+              <div className="flex flex-wrap items-center gap-6 text-white/90">
               <div className="flex items-center gap-2">
                 <User className="w-5 h-5" />
                 <span>{post.author}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                <span>{new Date(post.date).toLocaleDateString('ru-RU')}</span>
+                <span>{post.date ? new Date(post.date).toLocaleDateString('ru-RU') : '—'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -249,19 +129,27 @@ export function BlogArticlePage() {
       </section>
 
       {/* Article Content */}
-      <article className="py-16">
+      <article className="py-16 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-8 rounded-2xl overflow-hidden shadow-xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="mb-10 rounded-2xl overflow-hidden shadow-2xl ring-2 ring-gray-200/50 dark:ring-gray-700/50"
+            >
               <img
                 src={post.image}
                 alt={post.title}
-                className="w-full h-96 object-cover"
+                className="w-full h-80 md:h-96 object-cover"
               />
-            </div>
+            </motion.div>
 
-            <div
-              className="prose prose-lg dark:prose-invert max-w-none"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-img:rounded-xl prose-img:shadow-lg"
               dangerouslySetInnerHTML={{ __html: post.content }}
               style={{
                 color: '#333',

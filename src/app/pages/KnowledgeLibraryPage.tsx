@@ -1,107 +1,46 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Search, BookOpen, Video, FileText, BookMarked, Lock, Unlock } from 'lucide-react';
+import { Search, BookOpen, Video, FileText, BookMarked, Lock, Unlock, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import React from 'react';
+import { useEntity } from '../hooks';
+import { useAuth } from '../context/AuthContext';
 
-interface Article {
-  id: number;
-  title: string;
-  type: 'article' | 'video' | 'guide';
-  category: string;
-  preview: string;
-  isPremium: boolean;
-  readTime?: string;
-  videoDuration?: string;
-}
+type LibraryArticleRow = { id: number; title: string; slug: string; excerpt: string | null; content: string | null; category: string | null; image: string | null };
 
 export function KnowledgeLibraryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [isStudent, setIsStudent] = useState(false); // В реальном приложении из контекста пользователя
+  const { user } = useAuth();
+  const { list: libraryList, loadingList: loadingLibrary } = useEntity<LibraryArticleRow>('library_articles', { fetchListOnMount: true, listParams: { limit: 100 } });
+  const { list: courseBookings } = useEntity<{ id: number; user_id: number; course_id: number; status: string }>('course_bookings', {
+    fetchListOnMount: !!user,
+    listParams: { limit: 50 },
+  });
+  const isStudent = useMemo(() => !!user && courseBookings.some((b) => b.user_id === user.id && (b.status === 'confirmed' || b.status === 'completed')), [user, courseBookings]);
 
   const categories = [
     { id: 'all', name: 'Все материалы' },
+    { id: 'Собаки', name: 'Собаки' },
+    { id: 'Уход', name: 'Уход' },
     { id: 'basics', name: 'Основы груминга' },
-    { id: 'breeds', name: 'Породы собак' },
-    { id: 'tools', name: 'Инструменты' },
     { id: 'techniques', name: 'Техники стрижки' },
     { id: 'health', name: 'Здоровье питомцев' },
   ];
 
-  const articles: Article[] = [
-    {
-      id: 1,
-      title: 'Основы груминга для начинающих',
-      type: 'article',
-      category: 'basics',
-      preview: 'Полное руководство по основам груминга: от выбора инструментов до первых стрижек.',
-      isPremium: false,
-      readTime: '15 мин',
-    },
-    {
-      id: 2,
-      title: 'Как стричь йоркширского терьера',
-      type: 'video',
-      category: 'breeds',
-      preview: 'Пошаговое видео-руководство по стрижке йорка с профессиональными советами.',
-      isPremium: false,
-      videoDuration: '25 мин',
-    },
-    {
-      id: 3,
-      title: 'Профессиональные техники стрижки пуделя',
-      type: 'guide',
-      category: 'techniques',
-      preview: 'Углубленное руководство по различным техникам стрижки пуделей для выставок.',
-      isPremium: true,
-      readTime: '45 мин',
-    },
-    {
-      id: 4,
-      title: 'Выбор инструментов для груминга',
-      type: 'article',
-      category: 'tools',
-      preview: 'Подробный обзор всех необходимых инструментов и их правильное использование.',
-      isPremium: false,
-      readTime: '20 мин',
-    },
-    {
-      id: 5,
-      title: 'Работа с агрессивными питомцами',
-      type: 'video',
-      category: 'health',
-      preview: 'Техники работы с агрессивными и беспокойными питомцами от опытных грумеров.',
-      isPremium: true,
-      videoDuration: '30 мин',
-    },
-    {
-      id: 6,
-      title: 'Глоссарий терминов груминга',
-      type: 'article',
-      category: 'basics',
-      preview: 'Полный словарь терминов и понятий, используемых в груминге.',
-      isPremium: false,
-      readTime: '10 мин',
-    },
-    {
-      id: 7,
-      title: 'Техники стрижки: от базовых до профессиональных',
-      type: 'article',
-      category: 'techniques',
-      preview: 'Подробный обзор различных техник стрижки собак разных пород. Узнайте о базовых и продвинутых методах работы с шерстью.',
-      isPremium: false,
-      readTime: '25 мин',
-    },
-    {
-      id: 8,
-      title: 'Здоровье питомцев во время груминга',
-      type: 'article',
-      category: 'health',
-      preview: 'Важная информация о том, как обеспечить безопасность и здоровье питомца во время процедур груминга. Признаки проблем и первая помощь.',
-      isPremium: false,
-      readTime: '20 мин',
-    },
-  ];
+  const articles = useMemo(
+    () =>
+      libraryList.map((a) => ({
+        id: a.id,
+        title: a.title,
+        type: 'article' as const,
+        category: a.category || 'basics',
+        preview: a.excerpt || '',
+        isPremium: false,
+        readTime: '10 мин' as string | undefined,
+      })),
+    [libraryList]
+  );
 
   const filteredArticles = articles.filter((article) => {
     const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
@@ -124,34 +63,48 @@ export function KnowledgeLibraryPage() {
     }
   };
 
+  if (loadingLibrary) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[#40AB40] animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#009B00]/10 to-white dark:from-gray-900 dark:to-gray-800">
-      {/* Hero */}
-      <section
-        className="relative py-32 overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #009B00 0%, #89E689 100%)',
-        }}
+    <div className="min-h-screen bg-gradient-to-b from-[#009B00]/5 via-white to-[#40AB40]/5 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Hero в стиле /courses/schedule */}
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative py-20 md:py-28 overflow-hidden"
       >
-        <div className="container mx-auto px-4 text-center text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#40AB40]/20 via-transparent to-[#89E689]/10 dark:from-[#40AB40]/30 dark:to-transparent" />
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ delay: 0.2 }}
+            className="text-center max-w-3xl mx-auto"
           >
-            <h1 className="text-6xl font-bold mb-6">Библиотека знаний</h1>
-            <p className="text-2xl mb-8 max-w-2xl mx-auto">
-              С нашей академией прокачай навыки и знания в груминге 
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-[#40AB40] to-[#89E689] bg-clip-text text-transparent">
+              Библиотека знаний
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8">
+              С нашей академией прокачай навыки и знания в груминге
             </p>
-            <Link
-              to="/book/course"
-              className="inline-block bg-white text-[#009B00] px-8 py-4 rounded-full text-lg font-bold hover:bg-gray-100 transition-colors"
-            >
-              Записаться на курс
-            </Link>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <Link
+                to="/book/course"
+                className="inline-flex items-center gap-2 px-10 py-4 btn-gradient-green text-white rounded-2xl font-bold text-lg shadow-lg shadow-[#40AB40]/30 hover:shadow-xl transition-shadow"
+              >
+                Записаться на курс
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Filters */}
       <section className="py-8 bg-white dark:bg-gray-900 shadow-lg">
@@ -193,18 +146,18 @@ export function KnowledgeLibraryPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredArticles.map((article, index) => {
               const Icon = getTypeIcon(article.type);
-              return (
+              const canRead = !article.isPremium || isStudent;
+              const card = (
                 <motion.div
-                  key={article.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -10 }}
-                  className={`bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl cursor-pointer group ${
+                  className={`bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl cursor-pointer group flex flex-col h-full ${
                     article.isPremium && !isStudent ? 'opacity-60' : ''
                   }`}
                 >
-                  <div className="relative h-48 bg-gradient-to-br from-[#009B00] to-[#89E689] flex items-center justify-center">
+                  <div className="relative h-48 bg-gradient-to-br from-[#40AB40] to-[#89E689] flex items-center justify-center">
                     <Icon className="w-16 h-16 text-white" />
                     {article.isPremium && (
                       <div className="absolute top-4 right-4">
@@ -217,39 +170,42 @@ export function KnowledgeLibraryPage() {
                     )}
                   </div>
 
-                  <div className="p-6">
+                  <div className="p-6 flex-1 flex flex-col">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="px-3 py-1 bg-[#89E689]/20 text-[#009B00] rounded-full text-xs font-medium">
-                        {categories.find((c) => c.id === article.category)?.name}
+                        {categories.find((c) => c.id === article.category)?.name || article.category}
                       </span>
                       {article.readTime && (
                         <span className="text-sm text-gray-500">{article.readTime}</span>
                       )}
-                      {article.videoDuration && (
-                        <span className="text-sm text-gray-500">{article.videoDuration}</span>
-                      )}
                     </div>
 
                     <h3 className="text-xl font-bold mb-3">{article.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">{article.preview}</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 flex-1">{article.preview || 'Статья из библиотеки знаний.'}</p>
 
                     {article.isPremium && !isStudent ? (
                       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-center">
                         <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                          Требуется подписка на курс
+                          Запишитесь на любой курс — откроется доступ к материалам
                         </p>
                       </div>
                     ) : (
-                      <Link
-                        to={`/library/${article.id}`}
-                        className="inline-flex items-center gap-2 text-[#009B00] font-bold hover:gap-4 transition-all"
-                      >
+                      <span className="inline-flex items-center gap-2 text-[#40AB40] font-bold group-hover:gap-4 transition-all">
                         Читать
                         <Icon className="w-4 h-4" />
-                      </Link>
+                      </span>
                     )}
                   </div>
                 </motion.div>
+              );
+              return canRead ? (
+                <Link key={article.id} to={`/library/${article.id}`} className="block h-full">
+                  {card}
+                </Link>
+              ) : (
+                <div key={article.id} className="h-full">
+                  {card}
+                </div>
               );
             })}
           </div>

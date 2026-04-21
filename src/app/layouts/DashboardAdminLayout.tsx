@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
+  LayoutList,
   Calendar,
   FileBarChart,
   Users,
@@ -13,9 +14,10 @@ import {
   BookOpen,
   TrendingUp,
 } from 'lucide-react';
-
+import React from 'react';
 const SIDEBAR = [
   { to: '/dashboard-admin', label: 'Главная', icon: LayoutDashboard },
+  { to: '/dashboard-admin/board', label: 'Доска планирования', icon: LayoutList },
   { to: '/dashboard-admin/applications', label: 'Заявки', icon: MessageSquare },
   { to: '/dashboard-admin/bookings', label: 'Управление записями', icon: Calendar },
   { to: '/dashboard-admin/reports', label: 'Отчёты', icon: FileBarChart },
