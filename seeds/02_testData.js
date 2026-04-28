@@ -93,10 +93,12 @@ export const seed = async function (knex) {
   // course_schedules
   await knex('course_schedules').del();
   const scheduleData = [
-    { course_id: courseIds[0], start_date: '2026-02-01', start_time: '10:00', spots: 12 },
-    { course_id: courseIds[1], start_date: '2026-02-15', start_time: '14:00', spots: 8 },
-    { course_id: courseIds[2], start_date: '2026-02-20', start_time: '11:00', spots: 10 },
-    { course_id: courseIds[3], start_date: '2026-03-01', start_time: '13:00', spots: 15 },
+    { course_id: courseIds[0], start_date: '2026-04-21', start_time: '10:00', spots: 12 },
+    { course_id: courseIds[1], start_date: '2026-05-06', start_time: '14:00', spots: 10 },
+    { course_id: courseIds[2], start_date: '2026-05-20', start_time: '11:00', spots: 10 },
+    { course_id: courseIds[3], start_date: '2026-06-10', start_time: '13:00', spots: 15 },
+    { course_id: courseIds[4], start_date: '2026-07-08', start_time: '10:30', spots: 12 },
+    { course_id: courseIds[5], start_date: '2026-08-05', start_time: '15:00', spots: 12 },
   ];
   await knex('course_schedules').insert(scheduleData.map((s) => ({ ...s, created_by: adminId })));
   const scheduleIds = (await knex('course_schedules').select('id').orderBy('id')).map((r) => r.id);
@@ -140,8 +142,22 @@ export const seed = async function (knex) {
   // course_bookings
   await knex('course_bookings').del();
   await knex('course_bookings').insert([
-    { user_id: clientIds[0], course_id: courseIds[0], course_schedule_id: scheduleIds[0], master_id: masterIds[0], status: 'confirmed', notes: null, created_by: clientIds[0] },
-    { user_id: clientIds[2], course_id: courseIds[3], course_schedule_id: scheduleIds[3], master_id: masterIds[3], status: 'pending', notes: null, created_by: clientIds[2] },
+    {
+      user_id: clientIds[0],
+      course_id: courseIds[0],
+      course_schedule_id: scheduleIds[0],
+      master_id: masterIds[0],
+      status: 'оплачен',
+      notes: null,
+      homework_text:
+        'Практика: подготовьте рабочее место по чек-листу из лекции. Сфотографируйте набор инструментов и кратко опишите назначение каждого предмета (5–7 предложений).',
+      schedule_notes:
+        'Очные занятия: первая встреча — разбор инструментов и демонстрация расчёски. Вторая — работа с моделью под наблюдением куратора. Точные даты уточняйте у преподавателя.',
+      bulletin_text:
+        'Добро пожаловать на поток! Напоминаем о необходимости спокойного поведения с питомцами на площадке. Материалы лекций доступны в разделе «Учебные материалы».',
+      created_by: clientIds[0],
+    },
+    { user_id: clientIds[2], course_id: courseIds[3], course_schedule_id: scheduleIds[3], master_id: masterIds[3], status: 'ожидает оплату', notes: null, created_by: clientIds[2] },
   ]);
   const courseBookingIds = (await knex('course_bookings').select('id').orderBy('id')).map((r) => r.id);
 
@@ -222,14 +238,14 @@ export const seed = async function (knex) {
     { title: 'Экспресс-линька: помощь длинношёрстным породам', excerpt: 'Как работает экспресс-линька и почему она снижает количество шерсти дома на 70-90%.', content: `<div class="rounded-2xl border border-[#4A90E2]/25 bg-gradient-to-r from-[#4A90E2]/10 to-transparent p-5"><p><strong>Мария Иванова</strong>: экспресс-линька - это комплексная процедура с вымыванием и выдуванием созревшего подшерстка.</p></div><h2>Этапы процедуры</h2><ol><li>Предварительное вычесывание.</li><li>Глубокое очищение специальным шампунем.</li><li>Кондиционер для облегчения выхода подшерстка.</li><li>Сушка мощным компрессором.</li><li>Финишная проработка инструментами.</li></ol><h2>Результат</h2><p>Меньше шерсти в доме, более чистая кожа, выраженный блеск и снижение запаха «псины».</p><h2>Кому рекомендовано</h2><p>Шпицам, хаски, овчаркам, ретриверам, корги и другим породам с плотным подшерстком.</p>`, author_id: masterIds[1], category: 'Услуги', read_time: '6 мин', image: '/pictures/Express molting for long-haired dogs.jpg', published_at: new Date('2026-01-22'), created_by: adminId },
     { title: 'Работа с агрессивными питомцами: как мы это делаем', excerpt: 'Безопасный протокол работы со «сложными» питомцами без излишнего стресса.', content: `<div class="rounded-2xl border border-[#4A90E2]/25 bg-gradient-to-br from-[#4A90E2]/10 to-[#9EC3EF]/20 p-5"><p><strong>Ольга Козлова</strong>: в большинстве случаев агрессия - это реакция страха, а не «плохой характер».</p></div><h2>Наш протокол</h2><ul><li>Подробный анамнез перед записью.</li><li>Увеличенное время на процедуру.</li><li>Постепенное привыкание к инструментам.</li><li>Работа в паре с ассистентом и паузы на отдых.</li><li>Фокус на безопасности питомца и мастера.</li></ul><h2>Почему есть доплата</h2><p>Такие визиты занимают больше времени, требуют повышенной концентрации и специального подхода.</p><h2>Когда нужна консультация ветеринара</h2><p>Если реакция появилась резко или привязана к конкретной зоне, важно исключить боль и медицинские причины.</p>`, author_id: masterIds[5], category: 'Услуги', read_time: '4 мин', image: '/pictures/Aggression.jpg', published_at: new Date('2026-01-25'), created_by: adminId },
     // Курсы
-    { title: 'С чего начать обучение грумингу', excerpt: 'Первый шаг в профессию: выбор курса и формата обучения.', content: '<p>Онлайн, офлайн или гибрид — плюсы и минусы. Базовый курс для начинающих.</p>', author_id: masterIds[0], category: 'Курсы', read_time: '6 мин', image: '/pictures/The basics of dog grooming.jpg', published_at: new Date('2026-01-14'), created_by: adminId },
-    { title: 'Практика на курсах: как устроены занятия', excerpt: 'Как проходят практические занятия и работа с моделями.', content: '<p>Расписание, модели (собаки/кошки), отработка техник и обратная связь от преподавателей.</p>', author_id: masterIds[1], category: 'Курсы', read_time: '5 мин', image: '/pictures/Gallery courses - Practical lesson.jpg', published_at: new Date('2026-01-16'), created_by: adminId },
-    { title: 'Выставочный груминг: тонкости подготовки', excerpt: 'Как готовить собаку к выставке: стрижка, укладка, психология.', content: '<p>Специфика выставочного груминга и чему учат на курсе.</p>', author_id: masterIds[2], category: 'Курсы', read_time: '7 мин', image: '/pictures/Exhibition grooming.jpg', published_at: new Date('2026-01-11'), created_by: adminId },
-    { title: 'Креативный груминг: от идеи до результата', excerpt: 'Как создают дизайнерские стрижки и окрашивания.', content: '<p>Идеи, эскизы, инструменты и краски. Курс для тех, кто хочет выделяться.</p>', author_id: masterIds[2], category: 'Курсы', read_time: '6 мин', image: '/pictures/Creative grooming.jpg', published_at: new Date('2026-01-19'), created_by: adminId },
-    { title: 'Груминг кошек: курс для специалистов', excerpt: 'Чему учат на курсе по грумингу кошек и кому он подойдёт.', content: '<p>Особенности работы с кошками, породы, стресс-менеджмент.</p>', author_id: masterIds[3], category: 'Курсы', read_time: '5 мин', image: '/pictures/Cat grooming.jpg', published_at: new Date('2026-01-21'), created_by: adminId },
-    { title: 'Сертификат и трудоустройство после курсов', excerpt: 'Какие документы вы получите и как мы помогаем с трудоустройством.', content: '<p>Сертификат MARS GROOM, вакансии партнёров и стажировки.</p>', author_id: masterIds[0], category: 'Курсы', read_time: '4 мин', image: '/pictures/Gallery courses - Graduation day.jpg', published_at: new Date('2026-01-23'), created_by: adminId },
-    { title: 'Работа с инструментами: теория и практика', excerpt: 'Обзор инструментов на курсе и как ими пользоваться.', content: '<p>Ножницы, машинки, колтунорезы и другое оборудование в учебном классе.</p>', author_id: masterIds[4], category: 'Курсы', read_time: '6 мин', image: '/pictures/Gallery courses - Working with tools.jpg', published_at: new Date('2026-01-26'), created_by: adminId },
-    { title: 'Мастер-классы от приглашённых экспертов', excerpt: 'Как проходят мастер-классы и кто к нам приезжает.', content: '<p>Формат мастер-классов и темы от экспертов индустрии.</p>', author_id: masterIds[5], category: 'Курсы', read_time: '4 мин', image: '/pictures/Gallery courses - Master class.jpg', published_at: new Date('2026-01-28'), created_by: adminId },
+    { title: 'С чего начать обучение грумингу', excerpt: 'Первый шаг в профессию: выбор курса и формата обучения.', content: '<h2>С чего начать путь в профессии</h2><p>Самая частая ошибка новичка — выбирать курс только по цене. Важно ориентироваться на вашу цель: хотите быстро получить базу для старта в салоне, перейти из смежной сферы в груминг или углубиться в узкую специализацию.</p><h3>Шаг 1. Определите точку старта</h3><ul><li>Если вы никогда не стригли животных — выбирайте базовый курс.</li><li>Если уже работаете с клиентами — выбирайте продвинутый формат с практикой на сложных кейсах.</li><li>Если хотите выделяться на рынке — добавьте креативный или выставочный модуль.</li></ul><h3>Шаг 2. Сравните форматы</h3><p>Онлайн удобен для теории и повторения, очный формат ускоряет навык руки, гибрид даёт баланс. Оптимально — учиться по плану: теория дома, практика в классе.</p><h3>Шаг 3. Составьте личный план на 3 месяца</h3><p>Закрепите расписание занятий, часы практики и первые цели: собрать портфолио из 8–12 работ, пройти тесты на 100%, отработать минимум 5 пород.</p>', author_id: masterIds[0], category: 'Курсы', read_time: '6 мин', image: '/pictures/The basics of dog grooming.jpg', published_at: new Date('2026-01-14'), created_by: adminId },
+    { title: 'Практика на курсах: как устроены занятия', excerpt: 'Как проходят практические занятия и работа с моделями.', content: '<h2>Как проходит практический день</h2><p>Каждое занятие строится по принципу «показ — разбор — самостоятельная отработка». Это позволяет сразу переводить теорию в навык.</p><h3>Структура практики</h3><ol><li>Короткий бриф: цель занятия и критерии качества.</li><li>Демонстрация преподавателя на модели.</li><li>Работа студентов по чек-листу: подготовка, мытьё, сушка, стрижка, финальная оценка.</li><li>Индивидуальная обратная связь и фиксация ошибок.</li></ol><h3>Что важно для быстрого роста</h3><p>Снимайте «до/после», ведите журнал ошибок, отрабатывайте тайминг. Через 4–6 недель у большинства студентов заметно растёт уверенность и скорость выполнения процедур.</p>', author_id: masterIds[1], category: 'Курсы', read_time: '5 мин', image: '/pictures/Gallery courses - Practical lesson.jpg', published_at: new Date('2026-01-16'), created_by: adminId },
+    { title: 'Выставочный груминг: тонкости подготовки', excerpt: 'Как готовить собаку к выставке: стрижка, укладка, психология.', content: '<h2>Выставочный груминг: внимание к деталям</h2><p>Здесь важна не только техника стрижки, но и понимание стандарта породы, текстуры шерсти и сценического образа.</p><h3>Ключевые этапы подготовки</h3><ul><li>Анализ стандарта и пропорций конкретной собаки.</li><li>План работ за 2–3 недели до выставки.</li><li>Финальная подготовка за 24 часа: мытьё, укладка, контрольная коррекция линий.</li></ul><h3>Частые ошибки</h3><p>Слишком резкие переходы, перегруженный силуэт, неверный выбор косметики под тип шерсти. На курсе мы отрабатываем эти моменты на живых кейсах.</p>', author_id: masterIds[2], category: 'Курсы', read_time: '7 мин', image: '/pictures/Exhibition grooming.jpg', published_at: new Date('2026-01-11'), created_by: adminId },
+    { title: 'Креативный груминг: от идеи до результата', excerpt: 'Как создают дизайнерские стрижки и окрашивания.', content: '<h2>Креативный груминг как отдельная ниша</h2><p>Креатив начинается с грамотного брифа. Важно понимать характер питомца, ожидания владельца и допустимые техники именно для этой шерсти.</p><h3>Рабочий процесс</h3><ol><li>Эскиз и палитра.</li><li>Подготовка шерсти и формы.</li><li>Мягкие переходы длины и безопасное окрашивание.</li><li>Финальная фотосъёмка кейса для портфолио.</li></ol><p>На курсе вы получите шаблоны брифов, рабочие схемы по зонам и набор рекомендаций по уходу после процедуры.</p>', author_id: masterIds[2], category: 'Курсы', read_time: '6 мин', image: '/pictures/Creative grooming.jpg', published_at: new Date('2026-01-19'), created_by: adminId },
+    { title: 'Груминг кошек: курс для специалистов', excerpt: 'Чему учат на курсе по грумингу кошек и кому он подойдёт.', content: '<h2>Почему кошачий груминг требует отдельной подготовки</h2><p>Кошки иначе реагируют на фиксацию и шум, поэтому классические подходы из собачьего груминга подходят не всегда.</p><h3>Что вы освоите</h3><ul><li>Безопасная фиксация без стресса.</li><li>Разбор пород и типов шерсти.</li><li>Экспресс-сценарии для сложных клиентов.</li><li>Коммуникация с владельцем и домашний уход.</li></ul><p>Курс полезен грумерам, которые хотят расширить услуги и работать с более сложными кейсами.</p>', author_id: masterIds[3], category: 'Курсы', read_time: '5 мин', image: '/pictures/Cat grooming.jpg', published_at: new Date('2026-01-21'), created_by: adminId },
+    { title: 'Сертификат и трудоустройство после курсов', excerpt: 'Какие документы вы получите и как мы помогаем с трудоустройством.', content: '<h2>Что получает выпускник</h2><p>После аттестации студент получает сертификат MARS GROOM и рекомендации по дальнейшему развитию.</p><h3>Как мы помогаем с трудоустройством</h3><ul><li>Подготовка резюме и портфолио.</li><li>Репетиция собеседования.</li><li>Подбор вакансий партнёрских салонов.</li><li>Сопровождение в первые месяцы работы.</li></ul><p>Лучшие выпускники получают приглашения на стажировку и первые коммерческие проекты уже в процессе обучения.</p>', author_id: masterIds[0], category: 'Курсы', read_time: '4 мин', image: '/pictures/Gallery courses - Graduation day.jpg', published_at: new Date('2026-01-23'), created_by: adminId },
+    { title: 'Работа с инструментами: теория и практика', excerpt: 'Обзор инструментов на курсе и как ими пользоваться.', content: '<h2>Инструменты, которые должен уверенно знать грумер</h2><p>Результат зависит от техники и состояния инструмента. На курсе студенты учатся выбирать инструмент под задачу, а не «по привычке».</p><h3>База</h3><ul><li>Прямые, изогнутые и филировочные ножницы.</li><li>Машинки и насадки для разных зон.</li><li>Расчёски, пуходёрки, колтунорезы.</li></ul><h3>Практика ухода</h3><p>Мы отдельно обучаем чистке, хранению и базовой профилактике инструмента, чтобы сохранить точность реза и продлить срок службы.</p>', author_id: masterIds[4], category: 'Курсы', read_time: '6 мин', image: '/pictures/Gallery courses - Working with tools.jpg', published_at: new Date('2026-01-26'), created_by: adminId },
+    { title: 'Мастер-классы от приглашённых экспертов', excerpt: 'Как проходят мастер-классы и кто к нам приезжает.', content: '<h2>Формат мастер-классов</h2><p>Раз в месяц мы проводим интенсивы с приглашёнными экспертами: от выставочных стилистов до специалистов по креативу и работе с кошками.</p><h3>Что получает студент</h3><ul><li>Разбор актуальных трендов рынка.</li><li>Живые кейсы и демонстрации в реальном времени.</li><li>Чек-листы и схемы для внедрения в работу.</li></ul><p>Это помогает быстрее расширить специализацию и повысить средний чек после окончания курса.</p>', author_id: masterIds[5], category: 'Курсы', read_time: '4 мин', image: '/pictures/Gallery courses - Master class.jpg', published_at: new Date('2026-01-28'), created_by: adminId },
   ];
   await knex('blog_posts').insert(blogPostsData);
 
@@ -240,12 +256,12 @@ export const seed = async function (knex) {
   // library_articles (общий бесплатный доступ; после записи на курс добавляются материалы из модулей курсов)
   await knex('library_articles').del();
   await knex('library_articles').insert([
-    { title: 'Стандарты стрижки йоркширского терьера', slug: 'york-standard', excerpt: 'Описание стандарта породы для груминга.', content: '<p>Полный текст статьи о стандартах стрижки йорка.</p>', category: 'Собаки', image: '/pictures/Yorkshire Terrier (York).jpg', created_by: adminId },
-    { title: 'Уход за длинной шерстью', slug: 'long-coat-care', excerpt: 'Как ухаживать за длинношёрстными породами.', content: '<p>Полный текст об уходе за длинной шерстью.</p>', category: 'Уход', image: '/pictures/Golden Retriever.jpg', created_by: adminId },
-    { title: 'Основы груминга для начинающих', slug: 'basics-grooming', excerpt: 'От выбора инструментов до первых стрижек.', content: '<p>Руководство по основам груминга.</p>', category: 'basics', image: '/pictures/The basics of dog grooming.jpg', created_by: adminId },
-    { title: 'Техники стрижки: от базовых до профессиональных', slug: 'techniques-cutting', excerpt: 'Базовые и продвинутые методы работы с шерстью.', content: '<p>Обзор техник стрижки.</p>', category: 'techniques', image: '/pictures/Professional grooming.jpg', created_by: adminId },
-    { title: 'Здоровье питомцев во время груминга', slug: 'health-grooming', excerpt: 'Безопасность и здоровье питомца во время процедур.', content: '<p>Важная информация о здоровье во время груминга.</p>', category: 'health', image: '/pictures/Cat grooming.jpg', created_by: adminId },
-    { title: 'Глоссарий терминов груминга', slug: 'glossary', excerpt: 'Словарь терминов и понятий в груминге.', content: '<p>Полный глоссарий терминов.</p>', category: 'basics', image: null, created_by: adminId },
+    { title: 'Стандарты стрижки йоркширского терьера', slug: 'york-standard', excerpt: 'Описание стандарта породы для груминга.', content: '<h2>Базовые ориентиры по форме</h2><p>Йорк — порода, где важны чистые линии, лёгкость силуэта и аккуратная морда. Независимо от выбранного стиля, сохраняйте читаемую анатомию и комфорт питомца.</p><h3>Что проверяем перед работой</h3><ul><li>Состояние кожи и наличие колтунов.</li><li>Плотность шерсти в ключевых зонах: корпус, лапы, голова.</li><li>Реакцию питомца на сушку и фен.</li></ul><h3>Пошаговая схема</h3><ol><li>Гигиеническая подготовка: когти, уши, подушечки лап.</li><li>Купание и бережная сушка по росту шерсти.</li><li>Формирование силуэта корпуса и баланса лап.</li><li>Финальная детализация морды.</li></ol><p>Совет: всегда фиксируйте фото «до/после» — это ускоряет рост качества и улучшает портфолио.</p>', category: 'Собаки', image: '/pictures/Yorkshire Terrier (York).jpg', created_by: adminId },
+    { title: 'Уход за длинной шерстью', slug: 'long-coat-care', excerpt: 'Как ухаживать за длинношёрстными породами.', content: '<h2>Системный уход без колтунов</h2><p>Длинная шерсть требует режима: правильная косметика, бережная сушка и регулярное расчёсывание по зонам.</p><h3>Минимальный домашний протокол</h3><ul><li>Расчёсывание 3–4 раза в неделю.</li><li>Контроль проблемных зон: за ушами, подмышки, пах.</li><li>Увлажняющий спрей перед расчёской.</li><li>Плановый визит к грумеру раз в 4–6 недель.</li></ul><h3>Чего избегать</h3><p>Не расчёсывайте сухую шерсть и не тяните колтун силой. Это травмирует кожу и делает шерсть ломкой.</p>', category: 'Уход', image: '/pictures/Golden Retriever.jpg', created_by: adminId },
+    { title: 'Основы груминга для начинающих', slug: 'basics-grooming', excerpt: 'От выбора инструментов до первых стрижек.', content: '<h2>Старт в профессии грумера</h2><p>Новичку важно освоить фундамент: безопасность, гигиена, базовая геометрия стрижки и корректная работа с клиентом.</p><h3>Что изучить в первую очередь</h3><ul><li>Технику безопасности и эргономику рабочего места.</li><li>Типы шерсти и подбор инструментов.</li><li>Последовательность базовой процедуры.</li><li>Коммуникацию с владельцем до и после услуги.</li></ul><p>Рекомендуем вести дневник практики: фиксируйте ошибки, время работы и обратную связь от преподавателя.</p>', category: 'basics', image: '/pictures/The basics of dog grooming.jpg', created_by: adminId },
+    { title: 'Техники стрижки: от базовых до профессиональных', slug: 'techniques-cutting', excerpt: 'Базовые и продвинутые методы работы с шерстью.', content: '<h2>Техники, которые формируют уровень мастера</h2><p>Базовые техники дают стабильность, продвинутые — аккуратность и «чистый» коммерческий результат.</p><h3>База</h3><ul><li>Равномерная стрижка машинкой.</li><li>Работа прямыми ножницами.</li><li>Филировка и мягкие переходы.</li></ul><h3>Продвинутый уровень</h3><ul><li>Сложный блендинг.</li><li>Силуэтная коррекция под анатомию.</li><li>Комбинированные схемы под породу и запрос клиента.</li></ul><p>Главный критерий роста: предсказуемый результат по качеству и времени выполнения.</p>', category: 'techniques', image: '/pictures/Professional grooming.jpg', created_by: adminId },
+    { title: 'Здоровье питомцев во время груминга', slug: 'health-grooming', excerpt: 'Безопасность и здоровье питомца во время процедур.', content: '<h2>Безопасность всегда на первом месте</h2><p>Перед процедурой оцените состояние кожи, настроение и общую реакцию питомца. При любом подозрении на проблему лучше согласовать действия с владельцем и, при необходимости, с ветеринаром.</p><h3>Красные флаги</h3><ul><li>Выраженное раздражение кожи.</li><li>Сильный стресс, дрожь, агрессия.</li><li>Затруднённое дыхание.</li></ul><h3>Профилактика</h3><p>Короткие перерывы, тихий тон, корректная фиксация и чистый инструмент снижают риски и делают процедуру комфортной.</p>', category: 'health', image: '/pictures/Cat grooming.jpg', created_by: adminId },
+    { title: 'Глоссарий терминов груминга', slug: 'glossary', excerpt: 'Словарь терминов и понятий в груминге.', content: '<h2>Ключевые термины грумера</h2><p><strong>Тримминг</strong> — удаление созревшей жёсткой шерсти вручную или инструментом.</p><p><strong>Стриппинг</strong> — техника ручного выщипывания шерсти по стандарту породы.</p><p><strong>Клипперверк</strong> — работа машинкой с насадками.</p><p><strong>Блендинг</strong> — плавный переход между длинами шерсти.</p><p><strong>Скайнинг</strong> — прореживание подшёрстка для снятия объёма.</p><p><strong>Топ-нот</strong> — декоративная зона на голове, часто оформляется бантом.</p>', category: 'basics', image: '/pictures/The basics of dog grooming.jpg', created_by: adminId },
   ]);
 
   // education_org_info
@@ -321,24 +337,84 @@ export const seed = async function (knex) {
     { user_id: clientIds[0], question_id: qIds[1], option_id: optIds[2], created_by: clientIds[0] },
   ]);
 
-  // course_modules, course_content
+  // course_modules, course_content (для каждого курса минимум 3 материала)
   await knex('course_content').del();
   await knex('course_modules').del();
-  await knex('course_modules').insert([
-    { course_id: courseIds[0], title: 'Введение в груминг', description: 'Основы', sort_order: 1, created_by: adminId },
-    { course_id: courseIds[0], title: 'Практика', description: 'Стрижка на моделях', sort_order: 2, created_by: adminId },
-  ]);
-  const modIds = (await knex('course_modules').select('id').orderBy('id')).map((r) => r.id);
-  await knex('course_content').insert([
-    { module_id: modIds[0], title: 'Лекция 1', type: 'article', content: 'Текст лекции...', file_path: null, duration_minutes: null, sort_order: 1, is_required: true, created_by: adminId },
-    { module_id: modIds[0], title: 'Видео: инструменты', type: 'video', content: null, file_path: '/videos/tools.mp4', duration_minutes: 15, sort_order: 2, is_required: true, created_by: adminId },
-  ]);
+  const moduleInserts = [];
+  for (let i = 0; i < courseIds.length; i++) {
+    moduleInserts.push(
+      { course_id: courseIds[i], title: 'Введение и безопасность', description: 'Базовые принципы', sort_order: 1, created_by: adminId },
+      { course_id: courseIds[i], title: 'Инструменты и техники', description: 'Практический блок', sort_order: 2, created_by: adminId },
+      { course_id: courseIds[i], title: 'Практика и разбор ошибок', description: 'Подготовка к тестам', sort_order: 3, created_by: adminId }
+    );
+  }
+  await knex('course_modules').insert(moduleInserts);
+  const modulesByCourse = await knex('course_modules').select('id', 'course_id', 'title').orderBy(['course_id', { column: 'sort_order', order: 'asc' }]);
+  const groupedModules = new Map();
+  for (const m of modulesByCourse) {
+    if (!groupedModules.has(m.course_id)) groupedModules.set(m.course_id, []);
+    groupedModules.get(m.course_id).push(m);
+  }
+  const contentInserts = [];
+  for (const cid of courseIds) {
+    const courseName = coursesData[courseIds.indexOf(cid)]?.name ?? `Курс #${cid}`;
+    const mods = groupedModules.get(cid) ?? [];
+    const modA = mods[0];
+    const modB = mods[1] ?? modA;
+    const modC = mods[2] ?? modA;
+    contentInserts.push(
+      {
+        module_id: modA.id,
+        title: `${courseName}: теория и база`,
+        type: 'article',
+        content: `## Цель темы\nИзучить ключевые принципы по курсу «${courseName}» и подготовить базу для прохождения тестов.\n\n## Что нужно запомнить\n- Безопасность и этика всегда важнее скорости.\n- Последовательность действий влияет на качество результата.\n- Ошибки фиксируются в чек-листе и разбираются после практики.\n\n## Подготовка к тесту\n1. Повторите термины из темы.\n2. Выпишите 5 типичных ошибок и способы их избежать.\n3. Ответьте письменно: почему важна последовательность шагов в процедуре.`,
+        file_path: null,
+        duration_minutes: null,
+        sort_order: 1,
+        is_required: true,
+        gallery_images: JSON.stringify(['/pictures/The basics of dog grooming.jpg', '/pictures/Professional grooming.jpg', '/pictures/Creative grooming.jpg']),
+        created_by: adminId,
+      },
+      {
+        module_id: modB.id,
+        title: `${courseName}: видео-разбор`,
+        type: 'video',
+        content: `Видео с разбором техник по курсу «${courseName}». После просмотра заполните мини-конспект и отметьте 3 ключевых шага, которые нужны для успешного прохождения теста.`,
+        file_path: '/videos/tools.mp4',
+        duration_minutes: 18,
+        sort_order: 2,
+        is_required: true,
+        gallery_images: JSON.stringify(['/pictures/Exhibition grooming.jpg', '/pictures/Gallery courses - Practical lesson.jpg', '/pictures/Gallery courses - Master class.jpg']),
+        created_by: adminId,
+      },
+      {
+        module_id: modC.id,
+        title: `${courseName}: кейсы и самопроверка`,
+        type: 'article',
+        content: `## Практические кейсы\nРазберите 3 ситуации из практики и предложите решение по алгоритму курса.\n\n## Самопроверка\n- Оцените качество подготовки рабочего места.\n- Сверьте действия с чек-листом преподавателя.\n- Составьте план улучшения перед итоговым тестированием.\n\n## Как это помогает в тестах\nКейсы формируют навык принятия решений, поэтому задания проходят легче и стабильнее.`,
+        file_path: null,
+        duration_minutes: 12,
+        sort_order: 3,
+        is_required: true,
+        gallery_images: JSON.stringify(['/pictures/Gallery courses - Working with tools.jpg', '/pictures/Gallery courses - Graduation day.jpg', '/pictures/Cat grooming.jpg']),
+        created_by: adminId,
+      }
+    );
+  }
+  await knex('course_content').insert(contentInserts);
   const contentIds = (await knex('course_content').select('id').orderBy('id')).map((r) => r.id);
+  const modIds = (await knex('course_modules').select('id').orderBy('id')).map((r) => r.id);
 
   // user_course_progress (course_booking_id должен ссылаться на существующую запись)
   await knex('user_course_progress').del();
   await knex('user_course_progress').insert([
     { user_id: clientIds[0], course_id: courseIds[0], course_booking_id: courseBookingIds[0], module_id: modIds[0], content_id: contentIds[0], is_completed: true, progress_percent: 50, completed_at: new Date(), created_by: clientIds[0] },
+  ]);
+
+  await knex('user_course_quiz_results').del();
+  await knex('user_course_quiz_results').insert([
+    { user_id: clientIds[0], course_id: courseIds[0], test_index: 0, score_percent: 72, created_by: clientIds[0] },
+    { user_id: clientIds[0], course_id: courseIds[0], test_index: 1, score_percent: 88, created_by: clientIds[0] },
   ]);
 
   // messages (чат между пользователями)

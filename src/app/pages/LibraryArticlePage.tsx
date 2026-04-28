@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { ArrowRight, BookOpen, Video, FileText, BookMarked, Clock, Loader2 } from 'lucide-react';
 import { useEntity } from '../hooks';
+import { estimateReadTimeFromHtml } from '@/app/utils/readTime';
 
 type LibraryArticleRow = { id: number; title: string; slug: string; excerpt: string | null; content: string | null; category: string | null; image: string | null };
 
@@ -28,7 +29,7 @@ export function LibraryArticlePage() {
       preview: articleData.excerpt ?? '',
       content: articleData.content ?? '<p>Содержание статьи.</p>',
       isPremium: false,
-      readTime: '10 мин',
+      readTime: estimateReadTimeFromHtml(articleData.content),
     };
   }, [articleData]);
 

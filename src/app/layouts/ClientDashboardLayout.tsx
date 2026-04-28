@@ -7,10 +7,19 @@ import {
   Bell,
   Star,
   Dog,
+  GraduationCap,
 } from 'lucide-react';
+<<<<<<< Updated upstream
 import { useEntity } from '@/app/hooks';
 import { useAuth } from '@/app/context/AuthContext';
 import { getUploadBaseUrl } from '@/app/api/client';
+=======
+import { useAuth } from '@/app/context/AuthContext';
+import { useEntity } from '@/app/hooks';
+import { api } from '@/app/api/client';
+import { useEffect, useMemo, useState } from 'react';
+import { homeworkFromBooking } from '@/app/lib/learnerBookingFields';
+>>>>>>> Stashed changes
 
 const SIDEBAR = [
   { to: '/dashboard', label: 'Обзор', icon: LayoutDashboard },
@@ -19,13 +28,23 @@ const SIDEBAR = [
   { to: '/dashboard/notifications', label: 'Уведомления и рассылки', icon: Bell },
   { to: '/dashboard/reviews', label: 'Отзывы', icon: Star },
   { to: '/dashboard/pets', label: 'Питомцы', icon: Dog },
+<<<<<<< Updated upstream
   // История посещений — последним пунктом меню
   { to: '/dashboard/visits', label: 'История посещений', icon: Calendar },
+=======
+  { to: '/dashboard/my-courses', label: 'Мои курсы', icon: GraduationCap },
+  { to: '/dashboard/health', label: 'Дневник питомца', icon: Heart },
+  { to: '/book/service', label: 'Записаться на услугу', icon: CreditCard },
+  { to: '/services/list', label: 'Прайс-лист', icon: CreditCard },
+  { to: '/services/blog', label: 'Блог', icon: FileText },
+  { to: '/courses', label: 'Курсы', icon: BookOpen },
+>>>>>>> Stashed changes
 ];
 
 export function ClientDashboardLayout() {
   const location = useLocation();
   const { user } = useAuth();
+<<<<<<< Updated upstream
   const { list: pets } = useEntity<{ id: number; name: string; photo?: string | null }>('pets', { fetchListOnMount: !!user, enabled: !!user, listParams: { limit: 100 } });
   const { list: notifications } = useEntity<{ id: number; read_at?: string | null }>('notifications', { fetchListOnMount: !!user, enabled: !!user, listParams: { limit: 100 } });
   const unreadCount = notifications.filter((n) => !n.read_at).length;
@@ -34,6 +53,52 @@ export function ClientDashboardLayout() {
     if (photo.startsWith('http')) return photo;
     return getUploadBaseUrl() + photo;
   };
+=======
+  const { list: bookings } = useEntity<{ id: number; user_id: number; course_id: number; status: string; homework_text?: string | null }>('course_bookings', {
+    fetchListOnMount: !!user,
+    enabled: !!user,
+    listParams: { limit: 300 },
+  });
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [hasPendingHomework, setHasPendingHomework] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const myPaidBookings = useMemo(
+    () => bookings.filter((b) => b.user_id === user?.id && b.status === 'оплачен'),
+    [bookings, user?.id]
+  );
+
+  useEffect(() => {
+    const onHomeworkUpdated = () => setRefreshTick((v) => v + 1);
+    window.addEventListener('homework:updated', onHomeworkUpdated as EventListener);
+    return () => window.removeEventListener('homework:updated', onHomeworkUpdated as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    void (async () => {
+      const unreadRes = await api.get<{ success?: boolean; data?: Array<{ sender_id: number; unread_count: number }> }>('/conversations/unread-summary');
+      if (!('error' in unreadRes)) {
+        const rows = Array.isArray(unreadRes.data?.data) ? unreadRes.data.data : [];
+        setUnreadMessages(rows.reduce((sum, r) => sum + Number(r.unread_count || 0), 0));
+      }
+      const courseIds = myPaidBookings.map((b) => b.course_id);
+      if (courseIds.length === 0) {
+        setHasPendingHomework(false);
+        return;
+      }
+      const submissionRes = await api.get<{ success?: boolean; data?: Array<{ course_id: number }> }>('/course_homework_submissions/mine');
+      const submittedCourseIds = new Set(
+        'error' in submissionRes ? [] : (Array.isArray(submissionRes.data?.data) ? submissionRes.data.data.map((s) => s.course_id) : [])
+      );
+      const hasHomeworkFromGroomer = myPaidBookings.some((b) => homeworkFromBooking(b).length > 0);
+      const hasUnsentHomework = myPaidBookings.some((b) => homeworkFromBooking(b).length > 0 && !submittedCourseIds.has(b.course_id));
+      setHasPendingHomework(hasHomeworkFromGroomer && hasUnsentHomework);
+    })();
+  }, [user, myPaidBookings, location.pathname, refreshTick]);
+
+  const hasCoursesDot = unreadMessages > 0 || hasPendingHomework;
+>>>>>>> Stashed changes
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex">
@@ -63,6 +128,7 @@ export function ClientDashboardLayout() {
         <nav className="space-y-1">
           {SIDEBAR.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== '/dashboard' && location.pathname.startsWith(to));
+            const showDot = to === '/dashboard/my-courses' && hasCoursesDot;
             return (
               <Link
                 key={to + label}
@@ -73,9 +139,13 @@ export function ClientDashboardLayout() {
               >
                 <Icon className="w-5 h-5" />
                 <span className="truncate">{label}</span>
+<<<<<<< Updated upstream
                 {to === '/dashboard/notifications' && unreadCount > 0 ? (
                   <span className="ml-auto inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
                 ) : null}
+=======
+                {showDot ? <span className="ml-auto h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
+>>>>>>> Stashed changes
               </Link>
             );
           })}

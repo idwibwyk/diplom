@@ -25,6 +25,13 @@ const CONTACTS = (
 );
 
 export function Footer() {
+  const location = useLocation();
+  const handleMainClick = (e: React.MouseEvent) => {
+    if (location.pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
   return (
     <footer className="bg-gray-900 dark:bg-[#1e2939] text-white pt-16 pb-8">
       <div className="container mx-auto px-4">
@@ -36,7 +43,7 @@ export function Footer() {
           <div>
             <h4 className="font-bold text-lg mb-4">Меню навигации</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><Link to="/" className="hover:text-[#53C9CA] transition-colors">Главная</Link></li>
+              <li><Link to="/" onClick={handleMainClick} className="hover:text-[#53C9CA] transition-colors">Главная</Link></li>
               <li><Link to="/services" className="hover:text-[#53C9CA] transition-colors">Услуги</Link></li>
               <li><Link to="/courses" className="hover:text-[#53C9CA] transition-colors">Курсы</Link></li>
               <li><Link to="/book/service" className="hover:text-[#53C9CA] transition-colors">Запись на услугу</Link></li>

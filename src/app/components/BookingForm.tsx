@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+<<<<<<< Updated upstream
 import { Calendar, Clock, Heart, Check, Sparkles, UserCircle, Loader2, Scissors, User, MessageSquare, PawPrint } from 'lucide-react';
 import { api, type TimeSlot } from '@/app/api/client';
 import { useAuth } from '@/app/context/AuthContext';
@@ -8,6 +9,13 @@ import { useEntity } from '@/app/hooks';
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { Calendar as DateCalendar } from '@/app/components/ui/calendar';
 import { AppSelect } from '@/app/components/ui/AppSelect';
+=======
+import { Calendar, Clock, User, Phone, Mail, Heart, Check, UserCircle, Loader2, Sparkles } from 'lucide-react';
+import { api, type TimeSlot } from '@/app/api/client';
+import { useAuth } from '@/app/context/AuthContext';
+import { formatPhoneInput, isValidPhone, normalizePhoneForDb } from '@/app/utils/phoneMask';
+import { useEntity } from '@/app/hooks';
+>>>>>>> Stashed changes
 
 interface ServiceItem {
   id: number;
@@ -22,12 +30,17 @@ interface ServiceItem {
   price?: number | null;
 }
 interface MasterItem { id: number; full_name: string }
+<<<<<<< Updated upstream
 interface CourseItem { id: number; name: string; price?: number | null; loyalty_points?: number | null }
 interface CourseScheduleItem { id: number; course_id: number; start_date: string; start_time?: string | null; spots?: number | null }
 interface LoyaltyRow { user_id: number; points: number }
 interface UserProfile { id: number; birth_date?: string | null }
 
 type PetItem = { id: number; name: string; animal_type?: string | null; breed?: string | null; sex?: string | null };
+=======
+interface CourseItem { id: number; name: string; loyalty_points?: number | null }
+interface CourseScheduleItem { id: number; course_id: number; start_date: string; start_time: string | null; spots: number }
+>>>>>>> Stashed changes
 
 interface BookingFormProps {
   type: 'service' | 'course';
@@ -39,11 +52,20 @@ interface BookingFormProps {
   masterName?: string;
   servicesList?: ServiceItem[];
   mastersList?: MasterItem[];
+  coursesList?: CourseItem[];
+  courseSchedulesList?: CourseScheduleItem[];
   onSuccess?: () => void;
+<<<<<<< Updated upstream
   onSubmitted?: () => void;
 }
 
 export function BookingForm({ type, serviceId: initialServiceId, courseId, serviceName, courseName, masterId: initialMasterId, masterName, servicesList = [], mastersList = [], onSuccess, onSubmitted }: BookingFormProps) {
+=======
+  onRequireAuth?: () => void;
+}
+
+export function BookingForm({ type, serviceId: initialServiceId, courseId, serviceName, courseName, masterId: initialMasterId, masterName, servicesList = [], mastersList = [], coursesList = [], courseSchedulesList = [], onSuccess, onRequireAuth }: BookingFormProps) {
+>>>>>>> Stashed changes
   const { user } = useAuth();
   const { list: pets, loadingList: loadingPets, loadingListError: petsError } = useEntity<PetItem>('pets', { fetchListOnMount: true, enabled: !!user });
   const { list: coursesList } = useEntity<CourseItem>('courses', { fetchListOnMount: true, listParams: { limit: 200 } });
@@ -55,9 +77,22 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
   useEffect(() => {
     if (initialServiceId != null) setSelectedServiceId(initialServiceId);
     if (initialMasterId != null) setSelectedMasterId(initialMasterId);
-  }, [initialServiceId, initialMasterId]);
+    if (courseId != null) setSelectedCourseId(courseId);
+  }, [initialServiceId, initialMasterId, courseId]);
   const serviceId = selectedServiceId ?? initialServiceId;
   const masterId = selectedMasterId ?? initialMasterId;
+  const [selectedCourseId, setSelectedCourseId] = useState<number | undefined>(courseId);
+  const selectedCourseLoyalty = coursesList.find((c) => c.id === selectedCourseId)?.loyalty_points ?? 0;
+  const [pointsToSpend, setPointsToSpend] = useState(0);
+  const { list: loyaltyRows } = useEntity<{ user_id: number; points: number }>('loyalty_accounts', {
+    fetchListOnMount: !!user,
+    enabled: !!user,
+    listParams: { limit: 50 },
+  });
+  const availablePoints = loyaltyRows.find((r) => r.user_id === user?.id)?.points ?? 0;
+  const availableCourseDates = courseSchedulesList
+    .filter((s) => selectedCourseId != null && s.course_id === selectedCourseId && s.spots > 0)
+    .sort((a, b) => `${a.start_date}T${a.start_time ?? '00:00:00'}`.localeCompare(`${b.start_date}T${b.start_time ?? '00:00:00'}`));
 
   const [formData, setFormData] = useState({
     petId: '' as string,
@@ -72,8 +107,13 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+<<<<<<< Updated upstream
   const [autoServiceLocked, setAutoServiceLocked] = useState(false);
   const [selectedCourseScheduleId, setSelectedCourseScheduleId] = useState<number | null>(null);
+=======
+  const accentColor = type === 'course' ? '#40AB40' : '#53C9CA';
+  const selectedSchedule = availableCourseDates.find((s) => s.start_date === formData.date) ?? null;
+>>>>>>> Stashed changes
 
   const fetchSlots = useCallback(
     async (date: string) => {
@@ -108,6 +148,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
     }
   }, [formData.date, fetchSlots]);
 
+<<<<<<< Updated upstream
   const selectedPet = useMemo(() => {
     const pid = formData.petId ? parseInt(formData.petId, 10) : null;
     if (!pid) return null;
@@ -203,10 +244,25 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
       setAutoServiceLocked(false);
     }
   }, [selectedPet, servicesList]);
+=======
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user]);
+>>>>>>> Stashed changes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    if (!isValidPhone(formData.phone)) {
+      setSubmitError('Введите телефон в формате +7 (999) 123-45-67');
+      return;
+    }
     if (type === 'service' && !selectedSlot) {
       if (requiresAdminCall) {
         // Для собак с нештатной породой дата/время согласовываются с администратором.
@@ -239,6 +295,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
 
     try {
       if (type === 'service') {
+<<<<<<< Updated upstream
         if (requiresAdminCall) {
           const serviceNameForCall = servicesList.find((s) => s.id === serviceId)?.name ?? 'Услуга для собаки';
           const reminder = await api.post<{ success?: boolean; data?: unknown; error?: string }>('/notifications', {
@@ -249,6 +306,39 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
           });
           if ('error' in reminder && reminder.error) {
             setSubmitError(reminder.error);
+=======
+        if (user) {
+          const body = {
+            user_id: user.id,
+            service_id: serviceId,
+            master_id: masterId ?? null,
+            pet_id: null,
+            scheduled_at: selectedSlot!.datetime,
+            status: 'ожидает оплату',
+            contact_method: formData.contactMethod,
+            notes: formData.notes || null,
+            points_to_spend: Math.max(0, Math.min(pointsToSpend, availablePoints)),
+          };
+          const res = await api.post<{ success?: boolean; data?: unknown; error?: string }>('/service_bookings', body);
+          if ('error' in res && res.error) {
+            setSubmitError(res.error);
+            setIsSubmitting(false);
+            return;
+          }
+        } else {
+          const body = {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone || null,
+            source: 'booking',
+            status: 'new',
+            scheduled_at: selectedSlot!.datetime,
+            service_id: serviceId ?? null,
+          };
+          const res = await api.post<{ success?: boolean; error?: string }>('/leads', body);
+          if ('error' in res && res.error) {
+            setSubmitError(res.error);
+>>>>>>> Stashed changes
             setIsSubmitting(false);
             return;
           }
@@ -282,6 +372,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
         }
       } else {
         if (!user) {
+<<<<<<< Updated upstream
           setSubmitError('Для записи на курс необходимо войти в аккаунт.');
           setIsSubmitting(false);
           return;
@@ -313,6 +404,37 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
         });
         if ('error' in res && res.error) {
           setSubmitError(res.error);
+=======
+          setSubmitError('Для записи на курс необходимо войти в аккаунт');
+          setIsSubmitting(false);
+          if (onRequireAuth) onRequireAuth();
+          return;
+        }
+        const normalizedPhone = normalizePhoneForDb(formData.phone) || formData.phone;
+        if (!selectedCourseId) {
+          setSubmitError('Выберите курс');
+          setIsSubmitting(false);
+          return;
+        }
+        const bookingBody = {
+          user_id: user.id,
+          course_id: selectedCourseId,
+          course_schedule_id: selectedSchedule?.id ?? null,
+          master_id: masterId ?? null,
+          status: 'ожидает оплату',
+          notes: [
+            `Имя: ${formData.name}`,
+            `Email: ${formData.email}`,
+            `Телефон: ${normalizedPhone}`,
+            `Дата: ${formData.date || 'уточняется'}`,
+            `Способ связи: ${formData.contactMethod}`,
+            formData.notes ? `Комментарий: ${formData.notes}` : null,
+          ].filter(Boolean).join('\n'),
+        };
+        const bookingRes = await api.post<{ success?: boolean; error?: string }>('/course_bookings', bookingBody);
+        if ('error' in bookingRes && bookingRes.error) {
+          setSubmitError(bookingRes.error);
+>>>>>>> Stashed changes
           setIsSubmitting(false);
           return;
         }
@@ -332,10 +454,17 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
+<<<<<<< Updated upstream
         className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700"
       >
         <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 rounded-full flex items-center justify-center">
           <Check className="w-8 h-8 text-[#4A90E2]" />
+=======
+        className="bg-gradient-to-br from-[#40AB40] to-[#89E689] rounded-2xl p-8 text-center text-white"
+      >
+        <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center">
+          <Check className="w-8 h-8 text-[#40AB40]" />
+>>>>>>> Stashed changes
         </div>
         <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Запись успешно оформлена!</h3>
         <p className="mb-6 text-gray-600 dark:text-gray-300">Мы свяжемся с вами в ближайшее время для подтверждения</p>
@@ -350,6 +479,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
     <form onSubmit={handleSubmit} className="space-y-6">
       {type === 'service' && (
         <div>
+<<<<<<< Updated upstream
           <label className="block text-sm font-medium mb-2">
             <Heart className="w-4 h-4 inline mr-2" />
             Питомец *
@@ -396,6 +526,14 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
           <AppSelect
             value={serviceId != null ? String(serviceId) : ''}
             onChange={(v) => setSelectedServiceId(v ? parseInt(v, 10) : undefined)}
+=======
+          <label className="block text-sm font-medium mb-2">Услуга *</label>
+          <select
+            value={serviceId ?? ''}
+            onChange={(e) => setSelectedServiceId(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+>>>>>>> Stashed changes
             required
             disabled={autoServiceLocked || !formData.petId}
             options={[
@@ -410,6 +548,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
       )}
       {type === 'service' && mastersList.length > 0 && (
         <div>
+<<<<<<< Updated upstream
           <label className="block text-sm font-medium mb-2 flex items-center gap-2"><User className="w-4 h-4" />Мастер *</label>
           <AppSelect
             value={masterId != null ? String(masterId) : ''}
@@ -429,6 +568,43 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
             <Sparkles className="w-5 h-5 text-[#4A90E2]" />
             {courseName}
           </p>
+=======
+          <label className="block text-sm font-medium mb-2">Мастер (по желанию)</label>
+          <select
+            value={masterId ?? ''}
+            onChange={(e) => setSelectedMasterId(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+          >
+            <option value="">Любой мастер</option>
+            {mastersList.map((m) => (
+              <option key={m.id} value={m.id}>{m.full_name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {type === 'course' && coursesList.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium mb-2">Курс *</label>
+          <select
+            value={selectedCourseId ?? ''}
+            onChange={(e) => {
+              const nextCourseId = e.target.value ? parseInt(e.target.value, 10) : undefined;
+              setSelectedCourseId(nextCourseId);
+              setFormData((prev) => ({ ...prev, date: '' }));
+            }}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 transition-colors hover:border-[#40AB40]"
+            style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+            required
+          >
+            <option value="">Выберите курс</option>
+            {coursesList.map((courseItem) => (
+              <option key={courseItem.id} value={courseItem.id}>
+                {courseItem.name}
+              </option>
+            ))}
+          </select>
+>>>>>>> Stashed changes
         </div>
       )}
       {type === 'service' && servicesList.length === 0 && serviceName && (
@@ -450,6 +626,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
         </div>
       )}
 
+<<<<<<< Updated upstream
       {requiresAdminCall ? (
         <div className="space-y-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/40 p-4">
           <p className="text-sm text-gray-600 dark:text-gray-300">Для этой породы запись согласуется с администратором по телефону.</p>
@@ -459,6 +636,49 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             placeholder="+7 (___) ___-__-__"
             className="w-full px-4 py-3 border border-blue-200 dark:border-blue-800 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+=======
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            <User className="w-4 h-4 inline mr-2" />
+            Ваше имя *
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            <Phone className="w-4 h-4 inline mr-2" />
+            Телефон *
+          </label>
+          <input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: formatPhoneInput(e.target.value) })}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+            placeholder="+7 (999) 123-45-67"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            <Mail className="w-4 h-4 inline mr-2" />
+            Email *
+          </label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+>>>>>>> Stashed changes
             required
           />
         </div>
@@ -469,6 +689,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
             <Calendar className="w-4 h-4 inline mr-2" />
             Дата *
           </label>
+<<<<<<< Updated upstream
           <Popover>
             <PopoverTrigger asChild>
               <button
@@ -492,6 +713,37 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
               />
             </PopoverContent>
           </Popover>
+=======
+          {type === 'course' ? (
+            <select
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 transition-colors hover:border-[#40AB40]"
+              style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+              required
+              disabled={!selectedCourseId}
+            >
+              <option value="">{selectedCourseId ? 'Выберите дату старта' : 'Сначала выберите курс'}</option>
+              {availableCourseDates.map((schedule) => (
+                <option key={schedule.id} value={schedule.start_date}>
+                  {new Date(schedule.start_date).toLocaleDateString('ru-RU')}
+                  {schedule.start_time ? ` в ${schedule.start_time.slice(0, 5)}` : ''}
+                  {` · мест: ${schedule.spots}`}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              min={new Date().toISOString().split('T')[0]}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+              style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+              required
+            />
+          )}
+>>>>>>> Stashed changes
         </div>
         {type === 'service' && pets.length === 0 && user && (
           <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -528,12 +780,19 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
                   onClick={() => slot.available !== false && setSelectedSlot(slot)}
                   disabled={slot.available === false}
                   className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+<<<<<<< Updated upstream
                     selectedChain.has(slot.datetime)
                       ? 'bg-[#4A90E2] text-white'
                       : slot.available === false
                         ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 border border-gray-300 dark:border-gray-600 cursor-not-allowed'
                         : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:border-[#4A90E2]'
+=======
+                    selectedSlot?.datetime === slot.datetime
+                      ? 'text-white'
+                      : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600'
+>>>>>>> Stashed changes
                   }`}
+                  style={selectedSlot?.datetime === slot.datetime ? { backgroundColor: accentColor } : { borderColor: undefined }}
                 >
                   {slot.time}
                 </button>
@@ -560,6 +819,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
             <Clock className="w-4 h-4 inline mr-2" />
             Время
           </label>
+<<<<<<< Updated upstream
           {courseSchedules.length ? (
             <AppSelect
               value={String(selectedCourseScheduleId ?? courseSchedules[0]?.id ?? '')}
@@ -587,6 +847,64 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
           ) : null}
         </div>
       ) : null}
+=======
+          <p className="text-gray-500 text-sm">
+            {selectedSchedule?.start_time ? `Старт в ${selectedSchedule.start_time.slice(0, 5)}` : 'Время уточняется при подтверждении записи'}
+          </p>
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          <Phone className="w-4 h-4 inline mr-2" />
+          Способ связи
+        </label>
+        <select
+          value={formData.contactMethod}
+          onChange={(e) => setFormData({ ...formData, contactMethod: e.target.value })}
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+        >
+          <option value="по звонку">По звонку</option>
+          <option value="VK">VK</option>
+          <option value="Email">Email</option>
+        </select>
+      </div>
+
+      {type === 'service' && (
+        <>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              <Heart className="w-4 h-4 inline mr-2" />
+              Имя питомца *
+            </label>
+            <input
+              type="text"
+              value={formData.petName}
+              onChange={(e) => setFormData({ ...formData, petName: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+              style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              <Heart className="w-4 h-4 inline mr-2" />
+              Порода питомца *
+            </label>
+            <input
+              type="text"
+              value={formData.petBreed}
+              onChange={(e) => setFormData({ ...formData, petBreed: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+              style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+              placeholder="Например: Шпиц, Пудель"
+              required
+            />
+          </div>
+        </>
+      )}
+>>>>>>> Stashed changes
 
       <div>
         <label className="block text-sm font-medium mb-2 flex items-center gap-2"><MessageSquare className="w-4 h-4" />Дополнительные пожелания</label>
@@ -594,10 +912,31 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           rows={4}
+<<<<<<< Updated upstream
           className="w-full px-4 py-3 border border-blue-200 dark:border-blue-800 rounded-xl bg-blue-50/40 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
+=======
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+          style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+>>>>>>> Stashed changes
           placeholder="Расскажите нам о своих пожеланиях..."
         />
       </div>
+
+      {type === 'service' && user ? (
+        <div>
+          <label className="block text-sm font-medium mb-2">Списать лапки на эту запись</label>
+          <input
+            type="number"
+            min={0}
+            max={availablePoints}
+            value={pointsToSpend}
+            onChange={(e) => setPointsToSpend(Math.max(0, Number(e.target.value) || 0))}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
+          />
+          <p className="text-xs text-gray-500 mt-1">Доступно: {availablePoints} лапок</p>
+        </div>
+      ) : null}
 
       {submitError && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-sm">
@@ -607,6 +946,7 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
 
       <button
         type="submit"
+<<<<<<< Updated upstream
         disabled={
           isSubmitting ||
           (type === 'service' &&
@@ -616,6 +956,11 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
           (type === 'course' && (!user || !courseId || courseSchedules.length === 0))
         }
         className="w-full bg-[#4A90E2] hover:bg-[#3b7dd4] text-white py-4 rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+=======
+        disabled={isSubmitting || (type === 'service' && !selectedSlot && !!formData.date)}
+        className="w-full text-white py-4 rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        style={{ backgroundColor: accentColor }}
+>>>>>>> Stashed changes
       >
         {isSubmitting ? (
           <>
@@ -629,10 +974,19 @@ export function BookingForm({ type, serviceId: initialServiceId, courseId, servi
 
       <p className="text-sm text-gray-500 text-center">
         Нажимая кнопку, вы даёте{' '}
+<<<<<<< Updated upstream
         <Link to="/personal-data" className="text-[#4A90E2] font-medium hover:underline">
+=======
+        <Link to="/personal-data" className="font-medium hover:underline" style={{ color: type === 'course' ? '#40AB40' : '#53C9CA' }}>
+>>>>>>> Stashed changes
           согласие на обработку персональных данных
         </Link>
       </p>
+      {type === 'course' && (
+        <p className="text-sm text-center text-[#40AB40] font-medium">
+          После записи на курс вам начислятся {selectedCourseLoyalty > 0 ? selectedCourseLoyalty : 'бонусные'} лапки (система лояльности).
+        </p>
+      )}
     </form>
   );
 }

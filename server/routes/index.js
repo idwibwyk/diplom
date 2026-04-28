@@ -42,6 +42,9 @@ import educationOrgInfoRoutes from './education_org_info.js';
 import courseModulesRoutes from './course_modules.js';
 import courseContentRoutes from './course_content.js';
 import userCourseProgressRoutes from './user_course_progress.js';
+import userCourseQuizResultsRoutes from './user_course_quiz_results.js';
+import conversationsRoutes from './conversations.js';
+import courseHomeworkSubmissionsRoutes from './course_homework_submissions.js';
 import groomerPortfolioRoutes from './groomer_portfolio.js';
 import uploadRoutes from './upload.js';
 import messagesRoutes from './messages.js';
@@ -65,7 +68,8 @@ router.get('/', (req, res) => {
       'loyalty_accounts', 'pet_mood_entries', 'pet_observations', 'shelter_applications', 'zone_rental_applications',
       'leads', 'lead_call_tasks', 'blog_posts', 'faq_items', 'library_articles', 'notifications', 'master_schedules',
       'gallery_items', 'documents', 'contacts', 'course_quiz_questions', 'course_quiz_options', 'course_quiz_answers',
-      'education_org_info', 'course_modules', 'course_content', 'user_course_progress', 'groomer_portfolio',
+      'education_org_info', 'course_modules', 'course_content', 'user_course_progress', 'user_course_quiz_results',
+      'conversations', 'course_homework_submissions', 'groomer_portfolio',
       'messages', 'sms_campaigns', 'sms_recipients', 'warehouse_items', 'warehouse_transactions',
       'financial_transactions', 'reports',
     ].map((name) => `/api/${name}`),
@@ -112,6 +116,9 @@ router.use('/education_org_info', educationOrgInfoRoutes);
 router.use('/course_modules', courseModulesRoutes);
 router.use('/course_content', courseContentRoutes);
 router.use('/user_course_progress', userCourseProgressRoutes);
+router.use('/user_course_quiz_results', userCourseQuizResultsRoutes);
+router.use('/conversations', conversationsRoutes);
+router.use('/course_homework_submissions', courseHomeworkSubmissionsRoutes);
 router.use('/groomer_portfolio', groomerPortfolioRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/messages', messagesRoutes);

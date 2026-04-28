@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Search, Clock, Users, ArrowRight, Star, Calendar, Loader2 } from 'lucide-react';
@@ -40,6 +40,13 @@ export function CoursesPage() {
       rating: [4.9, 5.0, 4.8, 4.9, 4.7, 4.8][idx] ?? 4.8,
     }));
   }, [filteredCourses]);
+
+  const getCourseLinkByName = useCallback((courseName: string, fallbackId: number) => {
+    const normalized = courseName.toLowerCase();
+    const matched = coursesList.find((course) => course.name.toLowerCase() === normalized)
+      ?? coursesList.find((course) => course.name.toLowerCase().includes(normalized) || normalized.includes(course.name.toLowerCase()));
+    return `/book/course/${matched?.id ?? fallbackId}`;
+  }, [coursesList]);
 
   if (loadingList) {
     return (
@@ -231,9 +238,9 @@ export function CoursesPage() {
 
           <div className="max-w-4xl mx-auto space-y-6">
             {[
-              { course: 'Основы груминга собак', date: '1 февраля 2026', spots: 12 },
-              { course: 'Профессиональный груминг', date: '15 февраля 2026', spots: 8 },
-              { course: 'Креативный груминг', date: '1 марта 2026', spots: 15 },
+              { course: 'Основы груминга собак', date: '21 апреля 2026', spots: 12 },
+              { course: 'Профессиональный груминг', date: '6 мая 2026', spots: 10 },
+              { course: 'Креативный груминг', date: '10 июня 2026', spots: 15 },
             ].map((item, index) => (
               <motion.div
                 key={index}
@@ -257,7 +264,7 @@ export function CoursesPage() {
                     Осталось {item.spots} мест
                   </p>
                   <Link
-                    to={`/book/course/${index + 1}`}
+                    to={getCourseLinkByName(item.course, index + 1)}
                     className="inline-block bg-[#009B00] text-white px-6 py-2 rounded-full font-bold hover:bg-[#40AB40] transition-colors"
                   >
                     Записаться

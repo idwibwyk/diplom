@@ -8,8 +8,12 @@ import {
   Star,
   MessageCircle,
   TrendingUp,
+  MessagesSquare,
 } from 'lucide-react';
 import React from 'react';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/app/context/AuthContext';
+import { api } from '@/app/api/client';
 
 const SIDEBAR = [
   { to: '/dashboard-groomer', label: 'Главная', icon: LayoutDashboard },
@@ -19,11 +23,32 @@ const SIDEBAR = [
   { to: '/dashboard-groomer/portfolio', label: 'Портфолио работ', icon: Image },
   { to: '/dashboard-groomer/reviews', label: 'Отзывы и рейтинг', icon: Star },
   { to: '/dashboard-groomer/chat', label: 'Заметки грумера', icon: MessageCircle },
+  { to: '/dashboard-groomer/work-chats', label: 'Рабочие чаты', icon: MessagesSquare },
   { to: '/dashboard-groomer/stats', label: 'Статистика доходов', icon: TrendingUp },
 ];
 
 export function DashboardGroomerLayout() {
   const location = useLocation();
+  const { user } = useAuth();
+  const [hasTeachingDot, setHasTeachingDot] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    const onHomeworkReviewed = () => setRefreshTick((v) => v + 1);
+    window.addEventListener('homework:reviewed', onHomeworkReviewed as EventListener);
+    return () => window.removeEventListener('homework:reviewed', onHomeworkReviewed as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (!user || user.role !== 'groomer') return;
+    void (async () => {
+      const unreadRes = await api.get<{ success?: boolean; data?: Array<{ sender_id: number; unread_count: number }> }>('/conversations/unread-summary');
+      const unreadCount = 'error' in unreadRes ? 0 : (Array.isArray(unreadRes.data?.data) ? unreadRes.data.data.reduce((s, r) => s + Number(r.unread_count || 0), 0) : 0);
+      const pendingRes = await api.get<{ success?: boolean; data?: { count?: number } }>('/course_homework_submissions/groomer/pending-count');
+      const pendingCount = 'error' in pendingRes ? 0 : Number(pendingRes.data?.data?.count ?? 0);
+      setHasTeachingDot(unreadCount > 0 || pendingCount > 0);
+    })();
+  }, [user, location.pathname, refreshTick]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex">
@@ -32,6 +57,7 @@ export function DashboardGroomerLayout() {
         <nav className="space-y-1">
           {SIDEBAR.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== '/dashboard-groomer' && location.pathname.startsWith(to));
+            const showDot = to === '/dashboard-groomer/teaching' && hasTeachingDot;
             return (
               <Link
                 key={to}
@@ -42,6 +68,7 @@ export function DashboardGroomerLayout() {
               >
                 <Icon className="w-5 h-5" />
                 <span className="truncate">{label}</span>
+                {showDot ? <span className="ml-auto h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
               </Link>
             );
           })}

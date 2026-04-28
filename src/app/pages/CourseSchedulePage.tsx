@@ -4,8 +4,19 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, Clock, Users, Award, BookOpen, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEntity } from '@/app/hooks';
 
+<<<<<<< Updated upstream
 type Course = { id: number; name: string; level: string; format: string; duration?: string | null; price: number; description?: string | null; image?: string | null };
 type CourseSchedule = { id: number; course_id: number; start_date: string; start_time?: string | null; spots?: number | null };
+=======
+const SCHEDULE = [
+  { id: 1, date: '2026-04-21', time: '10:00', spots: 12 },
+  { id: 2, date: '2026-05-06', time: '14:00', spots: 10 },
+  { id: 3, date: '2026-05-20', time: '11:00', spots: 10 },
+  { id: 4, date: '2026-06-10', time: '13:00', spots: 15 },
+  { id: 5, date: '2026-07-08', time: '10:30', spots: 12 },
+  { id: 6, date: '2026-08-05', time: '15:00', spots: 12 },
+];
+>>>>>>> Stashed changes
 
 const formatMap: Record<string, string> = {
   hybrid: 'Гибрид',

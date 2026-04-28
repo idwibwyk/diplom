@@ -149,7 +149,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister }: AuthModalPro
                         setFieldErrors((p) => ({ ...p, name: '' }));
                         clearError();
                       }}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#53C9CA] ${fieldErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#40AB40] ${fieldErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                       placeholder="Введите имя"
                       required
                     />
@@ -166,7 +166,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister }: AuthModalPro
                       value={formData.phone}
                       onChange={handlePhoneChange}
                       onFocus={clearError}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#53C9CA] ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#40AB40] ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                       placeholder="+7 (999) 123-45-67"
                       required
                     />
@@ -188,7 +188,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister }: AuthModalPro
                     setFieldErrors((p) => ({ ...p, email: '' }));
                     clearError();
                   }}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#53C9CA] ${fieldErrors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#40AB40] ${fieldErrors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                   placeholder="Введите электронную почту"
                   required
                 />
@@ -208,7 +208,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister }: AuthModalPro
                     setFieldErrors((p) => ({ ...p, password: '' }));
                     clearError();
                   }}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#53C9CA] ${fieldErrors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[#40AB40] ${fieldErrors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                   placeholder={mode === 'login' ? '••••••••' : `Не менее ${MIN_PASSWORD_LENGTH} символов`}
                   required
                 />
@@ -219,7 +219,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister }: AuthModalPro
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#53C9CA] hover:bg-[#9ADFE0] disabled:opacity-60 text-white py-3 rounded-xl font-bold transition-colors"
+              className="w-full bg-[#40AB40] hover:bg-[#89E689] disabled:opacity-60 text-white py-3 rounded-xl font-bold transition-colors"
             >
               {loading ? 'Загрузка...' : mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
             </button>
@@ -234,7 +234,7 @@ export function AuthModal({ isOpen, onClose, onLogin, onRegister }: AuthModalPro
                 setHint(null);
                 setFieldErrors({});
               }}
-              className="text-[#53C9CA] no-underline hover:no-underline transition-transform duration-200 hover:scale-110 inline-block"
+              className="text-[#40AB40] no-underline hover:no-underline transition-transform duration-200 hover:scale-110 inline-block"
             >
               {mode === 'login' ? 'Создать аккаунт' : 'Уже есть аккаунт? Войти'}
             </button>

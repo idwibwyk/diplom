@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Scissors, Clock, Calendar, MapPin, Mail, CheckCircle, Sparkles, Wifi } from 'lucide-react';
+import { useAuth } from '@/app/context/AuthContext';
+import { useEntity } from '@/app/hooks';
+import { api } from '@/app/api/client';
 
 const FEATURES = [
   { icon: Scissors, label: 'Профессиональный стол для груминга', desc: 'Удобная высота, фиксация' },
@@ -12,7 +15,26 @@ const FEATURES = [
 ];
 
 export function ZoneRentalPage() {
+  const { user } = useAuth();
   const [hours, setHours] = useState(4);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [pointsToSpend, setPointsToSpend] = useState(0);
+  const [notice, setNotice] = useState('');
+  const { list: loyaltyRows } = useEntity<{ user_id: number; points: number }>('loyalty_accounts', {
+    fetchListOnMount: !!user,
+    enabled: !!user,
+    listParams: { limit: 50 },
+  });
+  const availablePoints = loyaltyRows.find((r) => r.user_id === user?.id)?.points ?? 0;
+  const scrollToForm = useCallback(() => {
+    const form = document.getElementById('form');
+    if (form) {
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
 
   const pricePerHour = 1500;
   const total = pricePerHour * hours;
@@ -45,13 +67,14 @@ export function ZoneRentalPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <Link
-                to="#form"
+              <button
+                type="button"
+                onClick={scrollToForm}
                 className="inline-flex items-center gap-2 px-10 py-4 btn-gradient-green text-white rounded-2xl font-bold text-lg shadow-lg shadow-[#40AB40]/30 hover:shadow-xl transition-shadow"
               >
                 <Calendar className="w-6 h-6" />
                 Оставить заявку
-              </Link>
+              </button>
             </motion.div>
           </motion.div>
         </div>
@@ -165,7 +188,19 @@ export function ZoneRentalPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              alert('Заявка отправлена! Мы свяжемся с вами для подтверждения.');
+              void (async () => {
+                const res = await api.post('/zone_rental_applications', {
+                  user_id: user?.id ?? null,
+                  name,
+                  phone,
+                  email,
+                  hours,
+                  message: message || null,
+                  points_to_spend: Math.max(0, Math.min(pointsToSpend, availablePoints)),
+                });
+                if ('error' in res) setNotice(res.error || 'Не удалось отправить заявку');
+                else setNotice('Заявка отправлена! Мы свяжемся с вами для подтверждения.');
+              })();
             }}
             className="space-y-4"
           >
@@ -173,18 +208,24 @@ export function ZoneRentalPage() {
               type="text"
               placeholder="Ваше имя"
               required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:ring-2 focus:ring-[#40AB40] focus:border-transparent transition-shadow"
             />
             <input
               type="tel"
               placeholder="Телефон"
               required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:ring-2 focus:ring-[#40AB40] focus:border-transparent"
             />
             <input
               type="email"
               placeholder="Email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:ring-2 focus:ring-[#40AB40] focus:border-transparent"
             />
             <div>
@@ -201,8 +242,24 @@ export function ZoneRentalPage() {
             <textarea
               placeholder="Даты, пожелания"
               rows={3}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:ring-2 focus:ring-[#40AB40]"
             />
+            {user ? (
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">Списать лапки</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={availablePoints}
+                  value={pointsToSpend}
+                  onChange={(e) => setPointsToSpend(Math.max(0, Number(e.target.value) || 0))}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:ring-2 focus:ring-[#40AB40]"
+                />
+                <p className="text-xs text-gray-500 mt-1">Доступно: {availablePoints} лапок</p>
+              </div>
+            ) : null}
             <label className="flex items-start gap-3 cursor-pointer">
               <input type="checkbox" required className="mt-1 w-5 h-5 rounded border-gray-300 accent-[#40AB40]" />
               <span className="text-sm text-gray-600 dark:text-gray-300">
@@ -219,6 +276,7 @@ export function ZoneRentalPage() {
               <Mail className="w-5 h-5" />
               Отправить заявку
             </button>
+            {notice ? <p className="text-sm text-[#40AB40]">{notice}</p> : null}
           </form>
         </motion.section>
 

@@ -6,6 +6,14 @@ import { useEntity } from '@/app/hooks';
 
 type BlogPostRow = { id: number; title: string; excerpt: string | null; author_id: number | null; category: string | null; read_time: string | null; image: string | null; published_at: string | null };
 type MasterRow = { id: number; full_name: string };
+const FALLBACK_BLOG_POSTS: BlogPostRow[] = [
+  { id: 2001, title: 'Как выстроить путь от новичка до преподавателя груминга', excerpt: 'Пошаговая траектория роста: практика, специализация, кейсы и подготовка к роли наставника.', author_id: null, category: 'Карьера', read_time: '8 мин', image: 'https://images.unsplash.com/photo-1653150756437-41454967e9f5?w=800', published_at: '2026-03-02' },
+  { id: 2002, title: '3 учебных маршрута под разные цели: салон, фриланс, студия', excerpt: 'Сравниваем программы и нагрузку, чтобы выбрать обучение под ваш темп и формат работы.', author_id: null, category: 'Обучение', read_time: '6 мин', image: 'https://images.unsplash.com/photo-1581888227599-779811939961?w=800', published_at: '2026-03-09' },
+  { id: 2003, title: 'Портфолио, которое приносит записи: структура и примеры', excerpt: 'Какие фото и тексты действительно конвертируют просмотры в заявки и повторные визиты.', author_id: null, category: 'Практика', read_time: '9 мин', image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800', published_at: '2026-03-14' },
+  { id: 2004, title: 'Экзамен на курсе: как подготовиться без стресса', excerpt: 'Контрольный чек-лист перед итоговой аттестацией и рекомендации по отработке слабых мест.', author_id: null, category: 'Обучение', read_time: '7 мин', image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800', published_at: '2026-03-18' },
+  { id: 2005, title: 'Разбор кейса: креативный груминг от брифа до финала', excerpt: 'Показываем полный цикл: коммуникация с клиентом, эскиз, техника исполнения и фото результата.', author_id: null, category: 'Креатив', read_time: '10 мин', image: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800', published_at: '2026-03-24' },
+  { id: 2006, title: 'Чек-лист старта карьеры после курса', excerpt: 'Документы, цены, сервис, реклама и первые 10 клиентов: с чего начать, чтобы не выгореть.', author_id: null, category: 'Карьера', read_time: '5 мин', image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800', published_at: '2026-03-28' },
+];
 
 export function CoursesBlogPage() {
   const [selectedCategory, setSelectedCategory] = useState('Все');
@@ -23,9 +31,11 @@ export function CoursesBlogPage() {
     return m?.full_name ?? 'Команда Mars Groom';
   };
 
+  const sourcePosts = useMemo(() => (postsRaw.length > 0 ? postsRaw : FALLBACK_BLOG_POSTS), [postsRaw]);
+
   const posts = useMemo(
     () =>
-      postsRaw.map((p) => ({
+      sourcePosts.map((p) => ({
         id: p.id,
         title: p.title,
         excerpt: p.excerpt ?? '',
@@ -35,7 +45,7 @@ export function CoursesBlogPage() {
         readTime: p.read_time ?? '5 мин',
         image: p.image ?? 'https://images.unsplash.com/photo-1653150756437-41454967e9f5?w=800',
       })),
-    [postsRaw, mastersList]
+    [sourcePosts, mastersList]
   );
 
   const categories = useMemo(() => {

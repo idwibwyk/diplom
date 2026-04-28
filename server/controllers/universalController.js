@@ -7,7 +7,10 @@
  * @param {Object} options - Дополнительные опции (excludeFields, allowGuestCreate, ownerField)
  */
 import db from '../db/knex.js';
+<<<<<<< Updated upstream
 import { syncLoyaltyForUser } from '../services/loyalty.js';
+=======
+>>>>>>> Stashed changes
 
 const createController = (tableName, rolesConfig = {}, options = {}) => {
   const {
@@ -15,6 +18,10 @@ const createController = (tableName, rolesConfig = {}, options = {}) => {
     allowGuestCreate = false,
     ownerField = 'created_by',
     searchField = 'name',
+<<<<<<< Updated upstream
+=======
+    autoAssignOwner = true,
+>>>>>>> Stashed changes
   } = options;
 
   const defaultRoles = {
@@ -95,8 +102,16 @@ const createController = (tableName, rolesConfig = {}, options = {}) => {
           return res.status(403).json({ success: false, error: 'Нет прав на создание' });
         }
 
+<<<<<<< Updated upstream
         if (user.id && data[ownerField] === undefined) {
           data[ownerField] = user.id;
+=======
+        if (autoAssignOwner && user.id && data[ownerField] === undefined) {
+          // Токен может быть валиден, но пользователь уже удалён после reseed.
+          // В таком случае не проставляем FK поле, чтобы не падать по ограничению.
+          const userExists = await db('users').where({ id: user.id }).first();
+          if (userExists) data[ownerField] = user.id;
+>>>>>>> Stashed changes
         }
 
         const [row] = await db(tableName).insert(data).returning('id');
@@ -109,12 +124,15 @@ const createController = (tableName, rolesConfig = {}, options = {}) => {
           message: 'Запись успешно создана',
         });
       } catch (error) {
+<<<<<<< Updated upstream
         if (error?.code === '23503' && String(error?.constraint || '').includes(`${tableName}_user_id_foreign`)) {
           return res.status(401).json({
             success: false,
             error: 'Сессия пользователя недействительна. Выполните вход заново.',
           });
         }
+=======
+>>>>>>> Stashed changes
         return res.status(500).json({ success: false, error: error.message });
       }
     },
@@ -134,11 +152,14 @@ const createController = (tableName, rolesConfig = {}, options = {}) => {
           }
         }
 
+<<<<<<< Updated upstream
         // Лояльность: перед выдачей собственных данных пересчитываем «лапки»
         if (tableName === 'loyalty_accounts' && user?.id && roles[user.role]?.readOwn) {
           await syncLoyaltyForUser(user.id);
         }
 
+=======
+>>>>>>> Stashed changes
         let query = db(tableName);
         const filterKeys = Object.keys(filters).filter(
           (k) => !['page', 'limit'].includes(k) && filters[k] !== undefined && filters[k] !== ''

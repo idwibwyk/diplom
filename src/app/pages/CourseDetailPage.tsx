@@ -48,11 +48,11 @@ export function CourseDetailPage() {
 
   useEffect(() => {
     if (!courseId) return;
-    refetchSchedules({ course_id: courseId, limit: 20 });
-    refetchReviews({ course_id: courseId, type: 'course', limit: 50 });
-    refetchInstructors({ course_id: courseId });
-    refetchModules({ course_id: courseId, limit: 30 });
-  }, [courseId, refetchSchedules, refetchReviews, refetchInstructors, refetchModules]);
+    void refetchSchedules({ course_id: courseId, limit: 20 });
+    void refetchReviews({ course_id: courseId, type: 'course', limit: 50 });
+    void refetchInstructors({ course_id: courseId });
+    void refetchModules({ course_id: courseId, limit: 30 });
+  }, [courseId]); // избегаем лишних рефетчей из-за нестабильных callback-ссылок
 
   const instructorMaster = useMemo(() => {
     if (!instructorsList.length || !mastersList.length) return null;

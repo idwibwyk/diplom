@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Phone, Mail, MapPin, Scissors, ArrowRight } from 'lucide-react';
 import React from 'react';
@@ -27,7 +27,14 @@ const CONTACTS = (
 
 export function CoursesFooter() {
   const { theme } = useTheme();
+  const location = useLocation();
   const isDark = theme === 'dark';
+  const handleMainClick = (e: React.MouseEvent) => {
+    if (location.pathname === '/courses') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <footer className="bg-gray-900 dark:bg-[#1e2939] text-white pt-16 pb-8">
@@ -40,7 +47,7 @@ export function CoursesFooter() {
           <div>
             <h4 className="font-bold text-lg mb-4">MARS GROOM — Курсы</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><Link to="/courses" className="hover:text-[#40AB40] transition-colors">Главная</Link></li>
+              <li><Link to="/courses" onClick={handleMainClick} className="hover:text-[#40AB40] transition-colors">Главная</Link></li>
               <li><Link to="/courses/list" className="hover:text-[#40AB40] transition-colors">Каталог</Link></li>
               <li><Link to="/courses/schedule" className="hover:text-[#40AB40] transition-colors">Расписание</Link></li>
               <li><Link to="/book/course" className="hover:text-[#40AB40] transition-colors">Записаться на курс</Link></li>

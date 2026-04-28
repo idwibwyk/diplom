@@ -294,7 +294,7 @@ export function CoursesMainPage() {
               {
                 id: 1,
                 course: 'Основы груминга собак',
-                date: '1 февраля 2026',
+                date: '21 апреля 2026',
                 spots: 12,
                 duration: '3 месяца',
                 price: 35000,
@@ -303,8 +303,8 @@ export function CoursesMainPage() {
               {
                 id: 2,
                 course: 'Профессиональный груминг',
-                date: '15 февраля 2026',
-                spots: 8,
+                date: '6 мая 2026',
+                spots: 10,
                 duration: '6 месяцев',
                 price: 65000,
                 format: 'Онлайн',
@@ -312,7 +312,7 @@ export function CoursesMainPage() {
               {
                 id: 3,
                 course: 'Креативный груминг',
-                date: '1 марта 2026',
+                date: '10 июня 2026',
                 spots: 15,
                 duration: '1 месяц',
                 price: 28000,

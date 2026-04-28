@@ -106,6 +106,18 @@ export const api = {
     return { data: json as { success: true; url: string } };
   },
 
+  /** Загрузка файла домашнего задания (multipart/form-data), поле "file" */
+  async uploadHomeworkFile(formData: FormData): Promise<{ data?: { success: true; url: string; original_name?: string }; error?: string }> {
+    const url = `${API_BASE}/upload/homework-file`;
+    const token = getToken();
+    const headers: HeadersInit = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { method: 'POST', body: formData, headers });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: (json as { error?: string }).error || res.statusText };
+    return { data: json as { success: true; url: string; original_name?: string } };
+  },
+
   /** Доступные слоты на дату для записи на услугу */
   getSlots: (params: { date: string; master_id?: number; service_id?: number }) => {
     const q = new URLSearchParams({ date: params.date });

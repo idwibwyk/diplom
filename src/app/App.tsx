@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { Header } from '@/app/components/Header';
 import { ServicesHeader } from '@/app/components/ServicesHeader';
@@ -43,13 +43,17 @@ import { GroomerDashboardMain } from '@/app/pages/GroomerDashboardMain';
 import { AdminDashboardMain } from '@/app/pages/AdminDashboardMain';
 import { GroomerBookingsPage } from '@/app/pages/GroomerBookingsPage';
 import { GroomerTeachingPage } from '@/app/pages/GroomerTeachingPage';
+import { GroomerTeachingCoursePage } from '@/app/pages/GroomerTeachingCoursePage';
+import { GroomerTeachingStudentChatPage } from '@/app/pages/GroomerTeachingStudentChatPage';
+import { GroomerTeachingHomeworkPage } from '@/app/pages/GroomerTeachingHomeworkPage';
 import { GroomerPortfolioPage } from '@/app/pages/GroomerPortfolioPage';
 import { GroomerReviewsPage } from '@/app/pages/GroomerReviewsPage';
 import { GroomerChatPage } from '@/app/pages/GroomerChatPage';
 import { GroomerStatsPage } from '@/app/pages/GroomerStatsPage';
 import { AdminServicesAddPage } from '@/app/pages/AdminServicesAddPage';
 import { AdminCoursesAddPage } from '@/app/pages/AdminCoursesAddPage';
-import { AdminBookingsPage } from '@/app/pages/AdminBookingsPage';
+import { AdminServiceBookingsPage } from '@/app/pages/AdminServiceBookingsPage';
+import { AdminCourseBookingsPage } from '@/app/pages/AdminCourseBookingsPage';
 import { AdminReportsPage } from '@/app/pages/AdminReportsPage';
 import { AdminStaffPage } from '@/app/pages/AdminStaffPage';
 import { AdminSmsPage } from '@/app/pages/AdminSmsPage';
@@ -57,8 +61,12 @@ import { AdminClientsPage } from '@/app/pages/AdminClientsPage';
 import { AdminWarehousePage } from '@/app/pages/AdminWarehousePage';
 import { AdminFinancePage } from '@/app/pages/AdminFinancePage';
 import { AdminStatsPage } from '@/app/pages/AdminStatsPage';
+<<<<<<< Updated upstream
 import { AdminModerationPage } from '@/app/pages/AdminModerationPage';
 import { AdminServicesBlogEditorPage } from '@/app/pages/AdminServicesBlogEditorPage';
+=======
+import { StaffWorkChatsPage } from '@/app/pages/StaffWorkChatsPage';
+>>>>>>> Stashed changes
 import { DashboardGroomerLayout } from '@/app/layouts/DashboardGroomerLayout';
 import { DashboardAdminLayout } from '@/app/layouts/DashboardAdminLayout';
 import { ClientDashboardLayout } from '@/app/layouts/ClientDashboardLayout';
@@ -68,7 +76,18 @@ import { DashboardSchedulePage } from '@/app/pages/DashboardSchedulePage';
 import { DashboardNotificationsPage } from '@/app/pages/DashboardNotificationsPage';
 import { DashboardReviewsPage } from '@/app/pages/DashboardReviewsPage';
 import { DashboardPetsPage } from '@/app/pages/DashboardPetsPage';
+<<<<<<< Updated upstream
 import { DashboardSettingsPage } from '@/app/pages/DashboardSettingsPage';
+=======
+import { DashboardMyCoursesPage } from '@/app/pages/DashboardMyCoursesPage';
+import { DashboardCourseQuizPage } from '@/app/pages/DashboardCourseQuizPage';
+import { DashboardMyCourseMaterialPage } from '@/app/pages/DashboardMyCourseMaterialPage';
+import { DashboardMyCourseHomeworkPage } from '@/app/pages/DashboardMyCourseHomeworkPage';
+import { DashboardMyCourseSchedulePage } from '@/app/pages/DashboardMyCourseSchedulePage';
+import { DashboardMyCourseNewsPage } from '@/app/pages/DashboardMyCourseNewsPage';
+import { DashboardMyCourseProgressPage } from '@/app/pages/DashboardMyCourseProgressPage';
+import { DashboardMyCourseInstructorChatPage } from '@/app/pages/DashboardMyCourseInstructorChatPage';
+>>>>>>> Stashed changes
 import { NotFoundPage } from '@/app/pages/NotFoundPage';
 import { FavoritesProvider } from '@/app/context/FavoritesContext';
 import { AuthProvider } from '@/app/context/AuthContext';
@@ -91,13 +110,21 @@ function AppContent() {
   const isBookingService = path.startsWith('/book/service');
   const isBookingCourse = path.startsWith('/book/course');
   const isDashboardCourses = path.startsWith('/dashboard-courses');
-  const isDashboardServices = path.startsWith('/dashboard');
+  const isStaffDashboard = path.startsWith('/dashboard-admin') || path.startsWith('/dashboard-groomer');
 
-  const useServicesLayout = isServicesPage || isBookingService || (isDashboardServices && !isDashboardCourses);
+  const useServicesLayout = isServicesPage || isBookingService;
   const useCoursesLayout = isCoursesPage || isBookingCourse || isDashboardCourses || path.startsWith('/library');
   const useMainLayout = path === '/';
 
-  const CurrentHeader = useMainLayout ? Header : useServicesLayout ? ServicesHeader : useCoursesLayout ? CoursesHeader : Header;
+  const CurrentHeader = isStaffDashboard
+    ? Header
+    : useMainLayout
+    ? Header
+    : useServicesLayout
+    ? ServicesHeader
+    : useCoursesLayout
+    ? CoursesHeader
+    : Header;
   const CurrentFooter = useMainLayout ? Footer : useServicesLayout ? ServicesFooter : useCoursesLayout ? CoursesFooter : Footer;
 
   return (
@@ -137,7 +164,18 @@ function AppContent() {
               <Route path="notifications" element={<DashboardNotificationsPage />} />
               <Route path="reviews" element={<DashboardReviewsPage />} />
               <Route path="pets" element={<DashboardPetsPage />} />
+<<<<<<< Updated upstream
               <Route path="settings" element={<DashboardSettingsPage />} />
+=======
+              <Route path="my-courses" element={<DashboardMyCoursesPage />} />
+              <Route path="my-courses/quiz/:courseId/:testIndex" element={<DashboardCourseQuizPage />} />
+              <Route path="my-courses/material/:contentId" element={<DashboardMyCourseMaterialPage />} />
+              <Route path="my-courses/homework" element={<DashboardMyCourseHomeworkPage />} />
+              <Route path="my-courses/schedule" element={<DashboardMyCourseSchedulePage />} />
+              <Route path="my-courses/news" element={<DashboardMyCourseNewsPage />} />
+              <Route path="my-courses/progress" element={<DashboardMyCourseProgressPage />} />
+              <Route path="my-courses/chat" element={<DashboardMyCourseInstructorChatPage />} />
+>>>>>>> Stashed changes
             </Route>
             <Route path="/dashboard-courses" element={<ClientDashboardCourses />} />
             <Route path="/licenses" element={<LicensesPage />} />
@@ -153,16 +191,22 @@ function AppContent() {
               <Route path="board" element={<GroomerBoardPage />} />
               <Route path="bookings" element={<GroomerBookingsPage />} />
               <Route path="teaching" element={<GroomerTeachingPage />} />
+              <Route path="teaching/course/:courseId" element={<GroomerTeachingCoursePage />} />
+              <Route path="teaching/chat" element={<GroomerTeachingStudentChatPage />} />
+              <Route path="teaching/homework" element={<GroomerTeachingHomeworkPage />} />
               <Route path="portfolio" element={<GroomerPortfolioPage />} />
               <Route path="reviews" element={<GroomerReviewsPage />} />
               <Route path="chat" element={<GroomerChatPage />} />
+              <Route path="work-chats" element={<StaffWorkChatsPage />} />
               <Route path="stats" element={<GroomerStatsPage />} />
             </Route>
             <Route path="/dashboard-admin" element={<DashboardAdminLayout />}>
               <Route index element={<AdminDashboardMain />} />
               <Route path="board" element={<AdminBoardPage />} />
               <Route path="applications" element={<AdminApplicationsPage />} />
-              <Route path="bookings" element={<AdminBookingsPage />} />
+              <Route path="bookings" element={<Navigate to="/dashboard-admin/service-bookings" replace />} />
+              <Route path="service-bookings" element={<AdminServiceBookingsPage />} />
+              <Route path="course-bookings" element={<AdminCourseBookingsPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="staff" element={<AdminStaffPage />} />
               <Route path="sms" element={<AdminSmsPage />} />
@@ -174,6 +218,7 @@ function AppContent() {
               <Route path="courses-add" element={<AdminCoursesAddPage />} />
               <Route path="moderation" element={<AdminModerationPage />} />
               <Route path="stats" element={<AdminStatsPage />} />
+              <Route path="work-chats" element={<StaffWorkChatsPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

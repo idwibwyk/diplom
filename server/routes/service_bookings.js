@@ -145,8 +145,70 @@ async function assignRandomMaster(req, res, next) {
 router.get('/', bookingsController.getAll);
 router.get('/search', bookingsController.search);
 router.get('/:id', validateIdParam, bookingsController.getById);
+<<<<<<< Updated upstream
 router.post('/', assignRandomMaster, validateSlot, validateAvailability, bookingsController.create);
 router.put('/:id', validateIdParam, validateSlot, validateAvailability, bookingsController.update);
+=======
+
+router.post('/', validateSlot, async (req, res) => {
+  try {
+    const actor = req.user || { id: null, role: 'guest' };
+    if (actor.role !== 'client' || !actor.id) {
+      return res.status(403).json({ success: false, error: 'Только авторизованный клиент может создать запись' });
+    }
+    const {
+      service_id,
+      master_id = null,
+      pet_id = null,
+      scheduled_at,
+      status = 'ожидает оплату',
+      contact_method = null,
+      notes = null,
+      points_to_spend = 0,
+    } = req.body || {};
+
+    if (!service_id || !scheduled_at) {
+      return res.status(400).json({ success: false, error: 'Не указаны service_id или scheduled_at' });
+    }
+
+    const result = await db.transaction(async (trx) => {
+      const spend = Math.max(0, Number(points_to_spend) || 0);
+      if (spend > 0) {
+        const acc = await trx('loyalty_accounts').where({ user_id: actor.id }).first().forUpdate();
+        const current = Number(acc?.points ?? 0);
+        if (current < spend) throw new Error('Недостаточно лапок для списания');
+        if (acc) {
+          await trx('loyalty_accounts')
+            .where({ user_id: actor.id })
+            .update({ points: current - spend, updated_at: db.raw('now()') });
+        }
+      }
+
+      const inserted = await trx('service_bookings')
+        .insert({
+          user_id: actor.id,
+          service_id,
+          master_id,
+          pet_id,
+          scheduled_at,
+          status,
+          contact_method,
+          notes,
+          created_by: actor.id,
+        })
+        .returning('*');
+      const row = Array.isArray(inserted) ? inserted[0] : inserted;
+      return row;
+    });
+
+    return res.status(201).json({ success: true, data: result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.put('/:id', validateIdParam, validateSlot, bookingsController.update);
+>>>>>>> Stashed changes
 router.delete('/:id', validateIdParam, bookingsController.delete);
 
 export default router;

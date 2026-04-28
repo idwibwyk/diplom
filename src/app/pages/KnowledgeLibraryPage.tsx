@@ -5,8 +5,17 @@ import { Link } from 'react-router-dom';
 import React from 'react';
 import { useEntity } from '../hooks';
 import { useAuth } from '../context/AuthContext';
+import { estimateReadTimeFromHtml } from '@/app/utils/readTime';
 
 type LibraryArticleRow = { id: number; title: string; slug: string; excerpt: string | null; content: string | null; category: string | null; image: string | null };
+const FALLBACK_LIBRARY_ARTICLES: LibraryArticleRow[] = [
+  { id: 1001, title: '7 ошибок начинающего грумера и как их избежать', slug: '7-oshibok-groomera', excerpt: 'Практичный чек-лист по типовым ошибкам на старте: от подготовки рабочего места до общения с клиентом.', content: null, category: 'basics', image: null },
+  { id: 1002, title: 'Тихий груминг: как снизить стресс у питомца', slug: 'quiet-grooming', excerpt: 'Методы мягкой адаптации, безопасной фиксации и корректной коммуникации с тревожными питомцами.', content: null, category: 'Уход', image: null },
+  { id: 1003, title: 'Шпицы и объём: как сохранить форму без лишней длины', slug: 'spitz-volume', excerpt: 'Разбираем технику послойного вычеса, сушку по направлениям и финальный шейпинг силуэта.', content: null, category: 'Собаки', image: null },
+  { id: 1004, title: 'Гигиенический груминг: стандарт салона за 45 минут', slug: 'hygiene-standard', excerpt: 'Пошаговый регламент экспресс-процедуры, который повышает качество и скорость работы.', content: null, category: 'techniques', image: null },
+  { id: 1005, title: 'Стерилизация инструментов: безопасный протокол', slug: 'tool-sterilization', excerpt: 'Какие средства использовать и как выстроить цикл дезинфекции без потери ресурса инструмента.', content: null, category: 'health', image: null },
+  { id: 1006, title: 'Как собрать первое портфолио грумера за 30 дней', slug: 'portfolio-30-days', excerpt: 'План съёмок, структура кейсов и критерии кадров, которые реально продают ваши услуги.', content: null, category: 'basics', image: null },
+];
 
 export function KnowledgeLibraryPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,18 +37,23 @@ export function KnowledgeLibraryPage() {
     { id: 'health', name: 'Здоровье питомцев' },
   ];
 
+  const sourceArticles = useMemo(
+    () => (libraryList.length > 0 ? libraryList : FALLBACK_LIBRARY_ARTICLES),
+    [libraryList]
+  );
+
   const articles = useMemo(
     () =>
-      libraryList.map((a) => ({
+      sourceArticles.map((a, index) => ({
         id: a.id,
         title: a.title,
-        type: 'article' as const,
+        type: (index % 3 === 1 ? 'guide' : index % 3 === 2 ? 'video' : 'article') as const,
         category: a.category || 'basics',
         preview: a.excerpt || '',
         isPremium: false,
-        readTime: '10 мин' as string | undefined,
+        readTime: estimateReadTimeFromHtml(a.content) as string | undefined,
       })),
-    [libraryList]
+    [sourceArticles]
   );
 
   const filteredArticles = articles.filter((article) => {
