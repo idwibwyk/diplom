@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { TrendingUp, Calendar, DollarSign, Scissors } from 'lucide-react';
+import { TrendingUp, Calendar, RussianRuble, Scissors } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -37,7 +37,7 @@ export function GroomerStatsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border-2 border-[#40AB40]/20"
         >
-          <DollarSign className="w-10 h-10 text-[#40AB40] mb-3" />
+          <RussianRuble className="w-10 h-10 text-[#40AB40] mb-3" />
           <p className="text-2xl font-bold text-[#40AB40]">{totalWeek.toLocaleString('ru-RU')} ₽</p>
           <p className="text-sm text-gray-500">За неделю</p>
         </motion.div>

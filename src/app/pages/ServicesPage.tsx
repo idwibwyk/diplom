@@ -2,15 +2,41 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Search, Dog, Cat, Star, Clock, ArrowRight, Calendar, Sparkles } from 'lucide-react';
-import { services as allServices } from '@/app/data/mockData';
 import { ContactForm } from '@/app/components/ContactForm';
+import { useEntity } from '@/app/hooks';
+
+type ServiceRow = {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  breed?: string | null;
+  duration?: string | null;
+  image?: string | null;
+  price?: number | null;
+  priceRange?: string | null;
+};
 
 export function ServicesPage() {
+  const shouldShowDuration = (service: ServiceRow) => {
+    const raw = String(service.duration ?? '').trim().toLowerCase();
+    if (!raw || raw === '0' || raw === '0 мин' || raw === '0 минут') return false;
+    if (service.name.toLowerCase().includes('агресс')) return false;
+    return true;
+  };
+  const formatPriceLabel = (value: string | null | undefined, fallback?: number | null) => {
+    const v = String(value || '').trim();
+    if (!v) return `${fallback ?? 0}₽`;
+    if (/[₽р]/i.test(v)) return v;
+    if (v.includes('-')) return `${v}₽`;
+    if (v.startsWith('от ')) return `${v}₽`;
+    return `${v}₽`;
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const navigate = useNavigate();
 
-  const services = allServices;
+  const { list: services } = useEntity<ServiceRow>('services', { fetchListOnMount: true, listParams: { limit: 300 } });
 
   const categories = [
     { id: 'all', name: 'Все услуги', icon: Star },
@@ -120,17 +146,19 @@ export function ServicesPage() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 right-4 bg-[#4A90E2] text-white px-4 py-2 rounded-full font-bold">
-                    {service.priceRange || `${service.price}₽`}
+                    {formatPriceLabel(service.priceRange, service.price)}
                   </div>
                 </div>
 
                 <div className="p-6 flex-1 flex flex-col min-h-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">{service.duration}</span>
+                  {shouldShowDuration(service) ? (
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">{service.duration}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : <div className="mb-3" />}
 
                   <h3 className="text-2xl font-bold mb-3">{service.name}</h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-4 flex-1">
@@ -154,65 +182,6 @@ export function ServicesPage() {
                     </Link>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Popular Packages */}
-      <section className="py-24 bg-gradient-to-b from-white to-[#073B4C]/10 dark:from-gray-900 dark:to-gray-800">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6">Популярные пакеты</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
-              Экономьте с нашими готовыми решениями
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Полный день красоты',
-                price: 5000,
-                services: ['Мытье и сушка', 'Стрижка', 'СПА-процедуры', 'Фотосессия'],
-              },
-              {
-                name: 'Спа-день',
-                price: 4000,
-                services: ['Релакс-массаж', 'Ароматерапия', 'Маски для шерсти', 'Мытье'],
-              },
-              {
-                name: 'Экспресс-уход перед выставкой',
-                price: 6000,
-                services: ['Профессиональная стрижка', 'Укладка', 'Блеск-покрытие', 'Консультация'],
-              },
-            ].map((pkg, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-                whileHover={{ scale: 1.05 }}
-                className="bg-gradient-to-br from-[#073B4C] to-[#06D6A0] text-white rounded-2xl p-8 shadow-2xl"
-              >
-                <h3 className="text-2xl font-bold mb-4">{pkg.name}</h3>
-                <div className="text-4xl font-bold mb-6">{pkg.price}₽</div>
-                <ul className="space-y-3 mb-8">
-                  {pkg.services.map((service, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <Star className="w-5 h-5 fill-white" />
-                      {service}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  to="/book/service"
-                  className="block w-full text-center bg-white text-[#4A90E2] py-3 rounded-xl font-bold hover:bg-[#9EC3EF] hover:text-white transition-colors"
-                >
-                  Выбрать пакет
-                </Link>
               </motion.div>
             ))}
           </div>

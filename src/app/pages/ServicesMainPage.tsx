@@ -3,16 +3,50 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Calendar, Star, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PriceCalculator } from '@/app/components/PriceCalculator';
-import { masters, reviews } from '@/app/data/mockData';
 import { ServicesGallery } from '@/app/components/ServicesGallery';
 import { ContactForm } from '@/app/components/ContactForm';
 import { useState, useEffect } from 'react';
+import { useEntity } from '@/app/hooks';
+
+type MasterRow = { id: number; full_name: string; image?: string | null; rating?: number | null; specialization?: string | null; experience?: number | null };
+type ReviewRow = {
+  id: number;
+  type?: string | null;
+  rating: number;
+  text: string;
+  created_at: string;
+  pet_name?: string | null;
+  master_id?: number | null;
+  user_id?: number | null;
+  service_booking_id?: number | null;
+};
+type UserRow = { id: number; name: string };
+type PetRow = { id: number; animal_type?: string | null; breed?: string | null; name: string };
+type ServiceBookingRow = { id: number; pet_id?: number | null };
 
 export function ServicesMainPage() {
   const navigate = useNavigate();
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const { list: masters } = useEntity<MasterRow>('masters', { fetchListOnMount: true, listParams: { limit: 100 } });
+  const { list: reviews } = useEntity<ReviewRow>('reviews', { fetchListOnMount: true, listParams: { limit: 200, moderation_status: 'approved' } });
+  const { list: users } = useEntity<UserRow>('users', { fetchListOnMount: true, listParams: { limit: 300 } });
+  const { list: pets } = useEntity<PetRow>('pets', { fetchListOnMount: true, listParams: { limit: 400 } });
+  const { list: serviceBookings } = useEntity<ServiceBookingRow>('service_bookings', { fetchListOnMount: true, listParams: { limit: 500 } });
+  const getMasterRating = (masterId: number, fallback?: number | null) => {
+    const rows = reviews.filter((r) => r.master_id === masterId);
+    if (!rows.length) return Number(fallback ?? 0);
+    const avg = rows.reduce((s, r) => s + Number(r.rating || 0), 0) / rows.length;
+    return Number.isFinite(avg) ? avg : Number(fallback ?? 0);
+  };
 
   const serviceReviews = reviews.filter((r: any) => r.type === 'service' || !r.type);
+  const reviewMeta = (r: ReviewRow) => {
+    const userName = users.find((u) => u.id === r.user_id)?.name || 'Клиент';
+    const booking = r.service_booking_id ? serviceBookings.find((b) => b.id === r.service_booking_id) : null;
+    const pet = booking?.pet_id ? pets.find((p) => p.id === booking.pet_id) : null;
+    const petLine = pet ? `${pet.animal_type === 'cat' ? 'Кошка' : pet.animal_type === 'rabbit' ? 'Кролик' : 'Собака'}${pet.breed ? ` • ${pet.breed}` : ''}` : (r.pet_name || 'Питомец');
+    return { userName, petLine };
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -96,21 +130,21 @@ export function ServicesMainPage() {
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
-                    src={master.image}
-                    alt={master.name}
+                    src={master.image || '/pictures/Gallery services - Cat grooming.jpg'}
+                    alt={master.full_name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-4 right-4 bg-[#4A90E2] text-white px-4 py-2 rounded-full font-bold flex items-center gap-2">
                     <Star className="w-4 h-4 fill-white" />
-                    {master.rating}
+                    {Number(getMasterRating(master.id, master.rating)).toFixed(1)}
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-2xl font-bold mb-2 group-hover:text-[#4A90E2] transition-colors">{master.name}</h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">{master.specialization}</p>
+                  <h3 className="text-2xl font-bold mb-2 group-hover:text-[#4A90E2] transition-colors">{master.full_name}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">{master.specialization || 'Груминг и уход'}</p>
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                     <Sparkles className="w-4 h-4" />
-                    <span>Опыт: {master.experience} лет</span>
+                    <span>Опыт: {master.experience ?? 0} лет</span>
                   </div>
                   <Link
                     to={`/book/service?masterId=${master.id}`}
@@ -221,11 +255,11 @@ export function ServicesMainPage() {
                     </p>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-lg">{serviceReviews[currentReviewIndex].author}</p>
-                        <p className="text-gray-500">{serviceReviews[currentReviewIndex].pet}</p>
+                        <p className="font-bold text-lg">{reviewMeta(serviceReviews[currentReviewIndex]).userName}</p>
+                        <p className="text-gray-500">{reviewMeta(serviceReviews[currentReviewIndex]).petLine}</p>
                       </div>
                       <p className="text-gray-500">
-                        {new Date(serviceReviews[currentReviewIndex].date).toLocaleDateString('ru-RU')}
+                        {new Date(serviceReviews[currentReviewIndex].created_at).toLocaleDateString('ru-RU')}
                       </p>
                     </div>
                   </motion.div>

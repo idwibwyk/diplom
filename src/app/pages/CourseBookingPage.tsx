@@ -1,19 +1,27 @@
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, Loader2 } from 'lucide-react';
 import { BookingForm } from '@/app/components/BookingForm';
-import { courses as allCourses } from '@/app/data/mockData';
-import { masters } from '@/app/data/mockData';
+import { useEntity } from '@/app/hooks';
+
+type Course = { id: number; name: string };
+type Master = { id: number; full_name: string };
 
 export function CourseBookingPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const masterIdParam = searchParams.get('masterId');
+  const { list: courses, loadingList: loadingCourses } = useEntity<Course>('courses', { fetchListOnMount: true, listParams: { limit: 200 } });
+  const { list: masters, loadingList: loadingMasters } = useEntity<Master>('masters', { fetchListOnMount: true, listParams: { limit: 200 } });
 
   const courseId = id ? parseInt(id, 10) : undefined;
-  const course = courseId ? allCourses.find((c) => c.id === courseId) : undefined;
+  const course = courseId ? courses.find((c) => c.id === courseId) : undefined;
   const masterId = masterIdParam ? parseInt(masterIdParam, 10) : undefined;
   const master = masterId ? masters.find((m) => m.id === masterId) : undefined;
+
+  if (loadingCourses || loadingMasters) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-[#40AB40]" /></div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-12">
@@ -46,7 +54,7 @@ export function CourseBookingPage() {
             courseId={course?.id}
             courseName={course?.name}
             masterId={master?.id}
-            masterName={master?.name}
+            masterName={master?.full_name}
             onSuccess={() => {}}
           />
         </motion.div>

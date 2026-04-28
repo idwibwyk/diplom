@@ -5,12 +5,9 @@
 import bcrypt from 'bcrypt';
 
 export const seed = async function (knex) {
-  // Сначала очищаем users и все таблицы, ссылающиеся на users (FK), иначе del() упадёт при повторном запуске сидов
-  await knex.raw('TRUNCATE TABLE users CASCADE');
-
   const passwordHash = await bcrypt.hash('123456', 10);
 
-  await knex('users').insert([
+  const baseUsers = [
     { email: 'admin@groom.ru', password_hash: passwordHash, name: 'Администратор', phone: '+7 (995) 020-50-13', role: 'admin', created_by: null },
     { email: 'anna@groom.ru', password_hash: passwordHash, name: 'Анна Петрова', phone: '+7 (999) 111-11-01', role: 'groomer', created_by: null },
     { email: 'maria@groom.ru', password_hash: passwordHash, name: 'Мария Иванова', phone: '+7 (999) 111-11-02', role: 'groomer', created_by: null },
@@ -22,5 +19,23 @@ export const seed = async function (knex) {
     { email: 'elena.s@example.com', password_hash: passwordHash, name: 'Елена Соколова', phone: '+7 (999) 222-22-02', role: 'client', created_by: null },
     { email: 'alexey@example.com', password_hash: passwordHash, name: 'Алексей Петров', phone: '+7 (999) 222-22-03', role: 'client', created_by: null },
     { email: 'irina@example.com', password_hash: passwordHash, name: 'Ирина Новикова', phone: '+7 (999) 222-22-04', role: 'client', created_by: null },
-  ]);
+  ];
+
+  for (const u of baseUsers) {
+    const existing = await knex('users').where({ email: u.email }).first();
+    if (!existing) {
+      await knex('users').insert(u);
+      continue;
+    }
+    // Не трогаем чужие аккаунты, просто гарантируем наличие «базовых» пользователей проекта.
+    await knex('users')
+      .where({ id: existing.id })
+      .update({
+        name: u.name,
+        phone: u.phone,
+        role: u.role,
+        password_hash: existing.password_hash || u.password_hash,
+        updated_at: knex.raw('now()'),
+      });
+  }
 };

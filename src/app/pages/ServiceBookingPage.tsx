@@ -1,13 +1,25 @@
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, Calendar, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { BookingForm } from '@/app/components/BookingForm';
 import { useEntity } from '@/app/hooks';
 
-type Service = { id: number; name: string };
+type Service = {
+  id: number;
+  name: string;
+  category?: string | null;
+  type?: string | null;
+  breed?: string | null;
+  duration?: string | null;
+  duration_minutes?: number | null;
+  duration_slots?: number | null;
+  image?: string | null;
+};
 type Master = { id: number; full_name: string };
 
 export function ServiceBookingPage() {
+  const [submitted, setSubmitted] = useState(false);
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const masterIdParam = searchParams.get('masterId');
@@ -37,34 +49,20 @@ export function ServiceBookingPage() {
             {servicesError}
           </div>
         )}
-        <Link
-          to={service ? `/services/${service.id}` : '/services/list'}
-          className="inline-flex items-center gap-2 text-[#4A90E2] hover:text-[#9EC3EF] mb-8 font-medium transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          {service ? 'Назад к услуге' : 'К услугам'}
-        </Link>
-        <div className="mb-6 p-4 bg-[#4A90E2]/5 rounded-xl border border-[#4A90E2]/20">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Заполните форму — мы свяжемся с вами для подтверждения. Услуга и мастер сохраняются, если вы перешли по кнопке «Записаться».
-          </p>
-        </div>
+        {!submitted && (
+          <>
+            <h1 className="text-3xl font-bold text-center mb-2">Запись на услугу</h1>
+            <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
+              Подарите питомцу профессиональный уход уже сегодня.
+              <br />
+             </p>
+          </>
+        )}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border-2 border-[#4A90E2]/20"
         >
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-14 h-14 bg-[#4A90E2] rounded-xl flex items-center justify-center">
-              <Calendar className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Запись на услугу</h1>
-              <p className="text-gray-500 dark:text-gray-400">
-                {service ? `Услуга: ${service.name}` : 'Выберите услугу'}
-              </p>
-            </div>
-          </div>
           <BookingForm
             servicesList={servicesList}
             mastersList={mastersList}
@@ -74,8 +72,18 @@ export function ServiceBookingPage() {
             masterId={master?.id}
             masterName={master?.full_name}
             onSuccess={() => {}}
+            onSubmitted={() => setSubmitted(true)}
           />
         </motion.div>
+        <div className="text-center mt-6">
+          <Link
+            to={service ? `/services/${service.id}` : '/services/list'}
+            className="inline-flex items-center gap-2 text-[#4A90E2] hover:text-[#9EC3EF] font-medium transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            К услугам
+          </Link>
+        </div>
       </div>
     </div>
   );

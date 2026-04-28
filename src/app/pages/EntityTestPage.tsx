@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Loader2, AlertCircle, RefreshCw, Trash2, Plus, CheckCircle } from 'lucide-react';
 import { useEntity } from '@/app/hooks';
+import { AppSelect } from '@/app/components/ui/AppSelect';
 
 /** Все 44 роутера (порядок как в server/routes/index.js) */
 const ENTITIES = [
@@ -100,18 +101,16 @@ export function EntityTestPage() {
         {/* Выбор сущности */}
         <div className="mb-4">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Сущность (44 роутера):</label>
-          <select
-            value={entityName}
-            onChange={(e) => {
-              setEntityName(e.target.value);
-              setCreateMessage(null);
-            }}
-            className="w-full max-w-md px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
-          >
-            {ENTITIES.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
+          <div className="w-full max-w-md">
+            <AppSelect
+              value={entityName}
+              onChange={(v) => {
+                setEntityName(v as any);
+                setCreateMessage(null);
+              }}
+              options={ENTITIES.map((name) => ({ value: String(name), label: String(name) }))}
+            />
+          </div>
         </div>
 
         {/* Кнопки управления */}

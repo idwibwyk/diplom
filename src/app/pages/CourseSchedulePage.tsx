@@ -2,16 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, Clock, Users, Award, BookOpen, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
-import { courses } from '@/app/data/mockData';
+import { useEntity } from '@/app/hooks';
 
-const SCHEDULE = [
-  { id: 1, date: '2026-02-01', time: '10:00', spots: 12 },
-  { id: 2, date: '2026-02-15', time: '14:00', spots: 8 },
-  { id: 3, date: '2026-02-20', time: '11:00', spots: 10 },
-  { id: 4, date: '2026-03-01', time: '13:00', spots: 15 },
-  { id: 5, date: '2026-03-10', time: '10:00', spots: 12 },
-  { id: 6, date: '2026-03-15', time: '15:00', spots: 14 },
-];
+type Course = { id: number; name: string; level: string; format: string; duration?: string | null; price: number; description?: string | null; image?: string | null };
+type CourseSchedule = { id: number; course_id: number; start_date: string; start_time?: string | null; spots?: number | null };
 
 const formatMap: Record<string, string> = {
   hybrid: 'Гибрид',
@@ -22,11 +16,26 @@ const formatMap: Record<string, string> = {
 export function CourseSchedulePage() {
   const [filter, setFilter] = useState<'all' | 'online' | 'offline' | 'hybrid'>('all');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { list: courses } = useEntity<Course>('courses', { fetchListOnMount: true, listParams: { limit: 200 } });
+  const { list: schedules } = useEntity<CourseSchedule>('course_schedules', { fetchListOnMount: true, listParams: { limit: 300 } });
 
-  const items = courses.map((c, i) => ({
-    ...c,
-    ...SCHEDULE[i],
-  }));
+  const items = schedules.map((s) => {
+    const c = courses.find((x) => x.id === s.course_id);
+    return {
+      id: s.id,
+      courseId: s.course_id,
+      name: c?.name || 'Курс',
+      level: c?.level || 'beginner',
+      format: c?.format || 'offline',
+      duration: c?.duration || '—',
+      price: c?.price || 0,
+      description: c?.description || '',
+      image: c?.image || '/pictures/hero-section groom room courses.jpg',
+      date: s.start_date,
+      time: s.start_time ? String(s.start_time).slice(0, 5) : '10:00',
+      spots: s.spots ?? 0,
+    };
+  });
 
   const filtered = filter === 'all'
     ? items
@@ -165,14 +174,14 @@ export function CourseSchedulePage() {
                                 {item.price.toLocaleString()} ₽
                               </span>
                               <Link
-                                to={`/book/course/${item.id}`}
+                                to={`/book/course/${item.courseId}`}
                                 className="inline-flex items-center gap-2 px-5 py-2.5 btn-gradient-green text-white rounded-xl font-medium"
                               >
                                 Записаться
                                 <ArrowRight className="w-4 h-4" />
                               </Link>
                               <Link
-                                to={`/courses/${item.id}`}
+                                to={`/courses/${item.courseId}`}
                                 className="inline-flex items-center gap-2 text-[#40AB40] font-medium hover:underline"
                               >
                                 Подробнее о курсе

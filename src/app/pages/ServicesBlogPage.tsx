@@ -1,14 +1,71 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Calendar, User, ArrowRight, Clock, Search, Loader2 } from 'lucide-react';
+import { Calendar, User, ArrowRight, Clock, Search, Loader2, HelpCircle, Sparkles, CalendarDays, BookOpen } from 'lucide-react';
 import { useEntity } from '@/app/hooks';
+import { getCardExcerptForServicesPost } from '@/app/data/servicesBlogStatic';
 
 type BlogPostRow = { id: number; title: string; excerpt: string | null; author_id: number | null; category: string | null; read_time: string | null; image: string | null; published_at: string | null };
 type MasterRow = { id: number; full_name: string };
 
+type TopicTab = 'all' | 'faq' | 'care' | 'visit';
+type ArticleTopic = 'faq' | 'care' | 'visit' | 'general';
+
+function inferTopic(title: string, excerpt: string): ArticleTopic {
+  const t = `${title} ${excerpt}`.toLowerCase();
+  if (
+    t.includes('миф') ||
+    t.includes('почему') ||
+    t.includes('как выбрать') ||
+    t.includes('как подготовить') ||
+    t.includes('что делать') ||
+    t.includes('частые проблем') ||
+    t.includes('вопрос') ||
+    t.includes('когда стрижка') ||
+    t.includes('зачем ')
+  ) {
+    return 'faq';
+  }
+  if (
+    t.includes('визит') ||
+    t.includes('запис') ||
+    t.includes('салон') ||
+    t.includes('щенк') ||
+    t.includes('подготов') ||
+    t.includes('грумеру')
+  ) {
+    return 'visit';
+  }
+  if (
+    t.includes('уход') ||
+    t.includes('стрижк') ||
+    t.includes('шерст') ||
+    t.includes('купан') ||
+    t.includes('когт') ||
+    t.includes('питан') ||
+    t.includes('расчес') ||
+    t.includes('инструмент') ||
+    t.includes('шампун') ||
+    t.includes('кондицион') ||
+    t.includes('гигиен') ||
+    t.includes('тримминг') ||
+    t.includes('линьк') ||
+    t.includes('колтун')
+  ) {
+    return 'care';
+  }
+  return 'general';
+}
+
+const TOPIC_TABS: { id: TopicTab; label: string; icon: typeof HelpCircle }[] = [
+  { id: 'all', label: 'Все материалы', icon: Sparkles },
+  { id: 'faq', label: 'Вопросы и разборы', icon: HelpCircle },
+  { id: 'care', label: 'Уход и техника', icon: BookOpen },
+  { id: 'visit', label: 'Визит в салон', icon: CalendarDays },
+];
+
 export function ServicesBlogPage() {
-  const [selectedCategory, setSelectedCategory] = useState('Все');
+  const [topicTab, setTopicTab] = useState<TopicTab>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const blogEntity = useEntity<BlogPostRow>('blog_posts', {
     fetchListOnMount: true,
@@ -25,35 +82,36 @@ export function ServicesBlogPage() {
 
   const posts = useMemo(
     () =>
-      postsRaw.map((p) => ({
-        id: p.id,
-        title: p.title,
-        excerpt: p.excerpt ?? '',
-        author: getAuthorName(p.author_id),
-        date: p.published_at ?? '',
-        category: p.category ?? 'Статья',
-        readTime: p.read_time ?? '5 мин',
-        image: p.image ?? 'https://images.unsplash.com/photo-1648643118660-efb8eb0aea93?w=800',
-      })),
+      postsRaw
+        .map((p) => {
+          const excerptFull = p.excerpt ?? '';
+          const excerptShort = getCardExcerptForServicesPost(p.title, excerptFull);
+          return {
+            id: p.id,
+            title: p.title,
+            excerpt: excerptShort,
+            topic: inferTopic(p.title, excerptFull),
+            author: getAuthorName(p.author_id),
+            date: p.published_at ?? '',
+            category: p.category ?? 'Статья',
+            readTime: p.read_time ?? '5 мин',
+            image: p.image ?? 'https://images.unsplash.com/photo-1648643118660-efb8eb0aea93?w=800',
+          };
+        })
+        .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()),
     [postsRaw, mastersList]
   );
 
-  const categories = useMemo(() => {
-    const cats = new Set<string>(['Все']);
-    posts.forEach((p) => p.category && cats.add(p.category));
-    return Array.from(cats);
-  }, [posts]);
-
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      const matchesCategory = selectedCategory === 'Все' || post.category === selectedCategory;
+      const matchesTopic = topicTab === 'all' || post.topic === topicTab;
       const matchesSearch =
         searchTerm === '' ||
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
+      return matchesTopic && matchesSearch;
     });
-  }, [posts, selectedCategory, searchTerm]);
+  }, [posts, topicTab, searchTerm]);
 
   if (loadingPosts) {
     return (
@@ -93,13 +151,20 @@ export function ServicesBlogPage() {
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8">
               Полезные статьи и советы по уходу за питомцами от наших специалистов
             </p>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="flex flex-wrap justify-center gap-4">
               <Link
                 to="/services/list"
                 className="inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-[#4A90E2] to-[#9EC3EF] text-white rounded-2xl font-bold text-lg shadow-lg shadow-[#4A90E2]/30 hover:shadow-xl transition-shadow"
               >
                 Прайс-лист
-                <Calendar className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                to="/book/service"
+                className="inline-flex items-center gap-2 rounded-2xl border-2 border-[#4A90E2]/40 bg-white px-10 py-4 text-lg font-bold text-[#4A90E2] transition-colors hover:bg-[#4A90E2]/10 dark:bg-gray-800"
+              >
+                Записаться на услугу
+                <ArrowRight className="w-5 h-5" />
               </Link>
             </motion.div>
           </motion.div>
@@ -121,19 +186,21 @@ export function ServicesBlogPage() {
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-full bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#4A90E2]"
               />
             </div>
-            {/* Categories */}
-            <div className="flex flex-wrap gap-4 justify-center">
-              {categories.map((category) => (
+            {/* Темы: FAQ, уход, визит — статьи по-прежнему про услуги салона */}
+            <div className="flex flex-wrap gap-3 justify-center">
+              {TOPIC_TABS.map(({ id, label, icon: Icon }) => (
                 <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                    selectedCategory === category
-                      ? 'bg-[#4A90E2] text-white'
-                      : 'bg-gray-100 dark:bg-gray-800 hover:bg-[#4A90E2] hover:text-white'
+                  key={id}
+                  type="button"
+                  onClick={() => setTopicTab(id)}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-colors ${
+                    topicTab === id
+                      ? 'bg-[#4A90E2] text-white shadow-md shadow-[#4A90E2]/25'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-[#4A90E2] hover:text-white'
                   }`}
                 >
-                  {category}
+                  <Icon className="h-4 w-4 shrink-0 opacity-90" />
+                  {label}
                 </button>
               ))}
             </div>

@@ -1,17 +1,47 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import React from 'react';
-import { Sparkles, Heart, Award, Users, ArrowRight, Star, Calendar, Clock, Shield, Smile, DollarSign, Phone, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Heart, Award, Users, ArrowRight, Star, Calendar, Clock, Shield, Smile, Phone, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as Accordion from '@radix-ui/react-accordion';
-import { faqItems, reviews, services, courses } from '@/app/data/mockData';
 import { MainGallery } from '@/app/components/MainGallery';
 import { ContactForm } from '@/app/components/ContactForm';
 import { useState, useEffect } from 'react';
+import { useEntity } from '@/app/hooks';
+
+type FaqRow = { id: number; question: string; answer: string };
+type ReviewRow = {
+  id: number;
+  rating: number;
+  text: string;
+  created_at: string;
+  pet_name?: string | null;
+  user_id?: number | null;
+  service_booking_id?: number | null;
+};
+type ServiceRow = { id: number; name: string; description: string; image?: string | null; duration?: string | null; price?: number | null; priceRange?: string | null };
+type CourseRow = { id: number; name: string; description: string; image?: string | null; duration?: string | null; price?: number | null };
+type UserRow = { id: number; name: string };
+type PetRow = { id: number; name: string; animal_type?: string | null; breed?: string | null };
+type ServiceBookingRow = { id: number; pet_id?: number | null };
 
 export function LandingPage() {
   const [animatedStats, setAnimatedStats] = useState([0, 0, 0, 0]);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const navigate = useNavigate();
+  const { list: faqItems } = useEntity<FaqRow>('faq_items', { fetchListOnMount: true, listParams: { limit: 200 } });
+  const { list: reviews } = useEntity<ReviewRow>('reviews', { fetchListOnMount: true, listParams: { limit: 200, moderation_status: 'approved' } });
+  const { list: services } = useEntity<ServiceRow>('services', { fetchListOnMount: true, listParams: { limit: 100 } });
+  const { list: courses } = useEntity<CourseRow>('courses', { fetchListOnMount: true, listParams: { limit: 100 } });
+  const { list: users } = useEntity<UserRow>('users', { fetchListOnMount: true, listParams: { limit: 300 } });
+  const { list: pets } = useEntity<PetRow>('pets', { fetchListOnMount: true, listParams: { limit: 400 } });
+  const { list: serviceBookings } = useEntity<ServiceBookingRow>('service_bookings', { fetchListOnMount: true, listParams: { limit: 500 } });
+  const reviewMeta = (r: ReviewRow) => {
+    const userName = users.find((u) => u.id === r.user_id)?.name || 'Клиент';
+    const booking = r.service_booking_id ? serviceBookings.find((b) => b.id === r.service_booking_id) : null;
+    const pet = booking?.pet_id ? pets.find((p) => p.id === booking.pet_id) : null;
+    const petLine = pet ? `${pet.animal_type === 'cat' ? 'Кошка' : pet.animal_type === 'rabbit' ? 'Кролик' : 'Собака'}${pet.breed ? ` • ${pet.breed}` : ''}` : (r.pet_name || 'Питомец');
+    return { userName, petLine };
+  };
 
   const stats = [
     { value: 5000, label: 'стрижек в год' },
@@ -28,6 +58,20 @@ export function LandingPage() {
 
   // Популярные курсы (первые 6)
   const popularCourses = courses.slice(0, 6);
+  const shouldShowDuration = (service: ServiceRow) => {
+    const raw = String(service.duration ?? '').trim().toLowerCase();
+    if (!raw || raw === '0' || raw === '0 мин' || raw === '0 минут') return false;
+    if (service.name.toLowerCase().includes('агресс')) return false;
+    return true;
+  };
+  const formatPriceLabel = (value?: string | null, fallback?: number | null) => {
+    const v = String(value || '').trim();
+    if (!v) return `${fallback ?? 0}₽`;
+    if (/[₽р]/i.test(v)) return v;
+    if (v.includes('-')) return `${v}₽`;
+    if (v.startsWith('от ')) return `${v}₽`;
+    return `${v}₽`;
+  };
 
   useEffect(() => {
     // Animate stats when component mounts
@@ -54,11 +98,12 @@ export function LandingPage() {
 
   // Автоматическая прокрутка отзывов
   useEffect(() => {
+    if (!reviews.length) return;
     const interval = setInterval(() => {
       setCurrentReviewIndex((prev) => (prev + 1) % reviews.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [reviews.length]);
 
   const milestones = [
     {
@@ -321,17 +366,19 @@ export function LandingPage() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 right-4 bg-[#53C9CA] text-white px-4 py-2 rounded-full font-bold">
-                    {service.priceRange || `${service.price}₽`}
+                    {formatPriceLabel(service.priceRange, service.price)}
                   </div>
                 </div>
 
                 <div className="p-6 flex-1 flex flex-col min-h-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">{service.duration}</span>
+                  {shouldShowDuration(service) ? (
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">{service.duration}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : <div className="mb-3" />}
 
                   <h3 className="text-2xl font-bold mb-3">{service.name}</h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-4 flex-1">
@@ -472,6 +519,7 @@ export function LandingPage() {
             <h2 className="text-5xl font-bold mb-6">Отзывы наших клиентов</h2>
           </div>
 
+          {reviews.length > 0 ? (
           <div className="max-w-4xl mx-auto relative flex items-center gap-4">
             <button
               type="button"
@@ -500,11 +548,11 @@ export function LandingPage() {
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-bold text-lg">{reviews[currentReviewIndex].author}</p>
-                    <p className="text-gray-500">{reviews[currentReviewIndex].pet}</p>
+                      <p className="font-bold text-lg">{reviewMeta(reviews[currentReviewIndex]).userName}</p>
+                      <p className="text-gray-500">{reviewMeta(reviews[currentReviewIndex]).petLine}</p>
                   </div>
                   <p className="text-gray-500">
-                    {new Date(reviews[currentReviewIndex].date).toLocaleDateString('ru-RU')}
+                    {new Date(reviews[currentReviewIndex].created_at).toLocaleDateString('ru-RU')}
                   </p>
                 </div>
               </motion.div>
@@ -532,6 +580,11 @@ export function LandingPage() {
               <ChevronRight className="w-6 h-6" />
             </button>
           </div>
+          ) : (
+            <div className="max-w-3xl mx-auto rounded-2xl bg-white dark:bg-gray-800 p-8 text-center text-gray-500">
+              Пока нет реальных отзывов из базы данных.
+            </div>
+          )}
         </div>
       </section>
 

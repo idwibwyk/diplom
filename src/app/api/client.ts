@@ -4,9 +4,14 @@
  */
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const STORAGE_USER = 'mars_groom_user';
 
 function getToken(): string | null {
   return localStorage.getItem('mars_groom_token');
+}
+
+export function hasToken(): boolean {
+  return !!getToken();
 }
 
 export function setToken(token: string | null): void {
@@ -46,6 +51,12 @@ async function request<T>(
   if (!res.ok) {
     const message = json?.error || res.statusText || 'Ошибка запроса';
     const hint = json?.hint;
+    if (res.status === 401 && token) {
+      // Сбрасываем сессию только когда токен действительно невалиден.
+      localStorage.removeItem('mars_groom_token');
+      localStorage.removeItem(STORAGE_USER);
+      window.dispatchEvent(new CustomEvent('mars_auth_invalid'));
+    }
     return hint != null ? { error: message, hint: String(hint) } : { error: message };
   }
   return { data: json as T };
@@ -54,6 +65,7 @@ async function request<T>(
 export interface TimeSlot {
   time: string;
   datetime: string;
+  available?: boolean;
 }
 
 /** Базовый URL бэкенда без /api — для картинок загрузок (uploads) */
@@ -74,6 +86,17 @@ export const api = {
   /** Загрузка фото питомца (multipart/form-data), поле "photo" */
   async uploadPetPhoto(formData: FormData): Promise<{ data?: { success: true; url: string }; error?: string }> {
     const url = `${API_BASE}/upload/pet-photo`;
+    const token = getToken();
+    const headers: HeadersInit = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { method: 'POST', body: formData, headers });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: (json as { error?: string }).error || res.statusText };
+    return { data: json as { success: true; url: string } };
+  },
+  /** Загрузка фото клиента (multipart/form-data), поле "photo" */
+  async uploadUserPhoto(formData: FormData): Promise<{ data?: { success: true; url: string }; error?: string }> {
+    const url = `${API_BASE}/upload/user-photo`;
     const token = getToken();
     const headers: HeadersInit = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;

@@ -103,7 +103,7 @@ export const services = [
   },
   {
     id: 10,
-    name: 'Чихуахуа (длинношёрстная)',
+    name: 'Стрижка чихуахуа (длинношёрстная)',
     category: 'dogs',
     type: 'grooming',
     price: 1400,
@@ -192,7 +192,7 @@ export const services = [
   },
   {
     id: 18,
-    name: 'Французский бульдог',
+    name: 'Стрижка французского бульдога',
     category: 'dogs',
     type: 'grooming',
     price: 1400,
@@ -214,7 +214,7 @@ export const services = [
   },
   {
     id: 20,
-    name: 'Шелти',
+    name: 'Стрижка шелти',
     category: 'dogs',
     type: 'grooming',
     price: 2000,

@@ -54,7 +54,7 @@ export function LoyaltySystem({ points, totalForDiscount, discountPercent }: Loy
         </div>
         <div className="flex items-center gap-2">
           <Award className="w-5 h-5" />
-          <span>Бонус в день рождения питомца</span>
+          <span>Бонус в день рождения клиента: 5% (окно 7 дней)</span>
         </div>
       </div>
 
@@ -65,7 +65,7 @@ export function LoyaltySystem({ points, totalForDiscount, discountPercent }: Loy
           className="mt-6 bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center"
         >
           <p className="font-bold text-lg mb-2">🎉 Поздравляем!</p>
-          <p>Вы получили скидку {discountPercent}% на следующую услугу</p>
+          <p>Вы получили скидку {discountPercent}% на услуги и курсы</p>
         </motion.div>
       )}
     </motion.div>

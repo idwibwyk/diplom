@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Filter, Clock, DollarSign, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Filter, Clock, RussianRuble, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
+import { AppSelect } from '@/app/components/ui/AppSelect';
 
 const COLUMNS = [
   { id: 'today', title: 'Записи на сегодня', color: 'bg-blue-500/20 border-blue-500/50' },
@@ -107,7 +108,7 @@ export function GroomerBoardPage() {
               ~{avgTime} мин
             </span>
             <span className="flex items-center gap-1">
-              <DollarSign className="w-4 h-4" />
+              <RussianRuble className="w-4 h-4" />
               {revenue.toLocaleString()} ₽
             </span>
           </div>
@@ -118,15 +119,17 @@ export function GroomerBoardPage() {
             <Filter className="w-5 h-5" />
             <span className="font-medium">Фильтры:</span>
           </div>
-          <select
-            value={filterAnimal}
-            onChange={(e) => setFilterAnimal(e.target.value as 'all' | 'dog' | 'cat')}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
-          >
-            <option value="all">Все животные</option>
-            <option value="dog">Собаки</option>
-            <option value="cat">Кошки</option>
-          </select>
+          <div className="min-w-[220px]">
+            <AppSelect
+              value={filterAnimal}
+              onChange={(v) => setFilterAnimal(v as 'all' | 'dog' | 'cat')}
+              options={[
+                { value: 'all', label: 'Все животные' },
+                { value: 'dog', label: 'Собаки' },
+                { value: 'cat', label: 'Кошки' },
+              ]}
+            />
+          </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"

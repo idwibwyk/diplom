@@ -1,15 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, Star, Calendar, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, Calendar, Sparkles, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEntity } from '../hooks';
+import React from 'react';
 
 type MasterRow = { id: number; full_name: string; experience: number | null; specialization: string | null; rating: number | null; image: string | null };
 type PortfolioRow = { id: number; master_id: number; title: string; description: string | null; image: string | null; service_id: number | null; breed: string | null; work_date: string | null };
+type ReviewRow = { id: number; master_id: number | null; rating: number; moderation_status?: string | null };
 
 const DEFAULT_MASTER_IMG = '/pictures/Groomer Anna.jpg';
 
 export function MasterDetailPage() {
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const { id } = useParams<{ id: string }>();
   const masterId = id ? parseInt(id, 10) : null;
   const { item: masterData, loadingItem, loadingItemError } = useEntity<MasterRow>('masters', {
@@ -22,6 +25,7 @@ export function MasterDetailPage() {
     fetchListOnMount: true,
     listParams: { limit: 50, ...(masterId != null ? { master_id: masterId } : {}) },
   });
+  const { list: reviews } = useEntity<ReviewRow>('reviews', { fetchListOnMount: true, listParams: { limit: 500, moderation_status: 'approved' } });
 
   const master = useMemo(() => {
     if (!masterData) return null;
@@ -34,6 +38,12 @@ export function MasterDetailPage() {
       image: masterData.image || DEFAULT_MASTER_IMG,
     };
   }, [masterData]);
+
+  const ratingFromReviews = useMemo(() => {
+    const rows = reviews.filter((r) => r.master_id === masterId);
+    if (!rows.length) return null;
+    return rows.reduce((sum, x) => sum + Number(x.rating || 0), 0) / rows.length;
+  }, [reviews, masterId]);
 
   const portfolioItems = useMemo(
     () =>
@@ -106,7 +116,7 @@ export function MasterDetailPage() {
               />
               <div className="absolute top-4 right-4 bg-[#4A90E2] text-white px-4 py-2 rounded-full font-bold flex items-center gap-2">
                 <Star className="w-4 h-4 fill-white" />
-                {Number(master.rating).toFixed(1)}
+                {Number(ratingFromReviews ?? master.rating).toFixed(1)}
               </div>
             </div>
             <div className="md:w-3/5 p-8 md:p-12">
@@ -133,26 +143,29 @@ export function MasterDetailPage() {
         </motion.div>
 
         <section>
-          <h2 className="text-2xl font-bold mb-6 text-[#4A90E2]">Портфолио работ</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayPortfolio.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
-              >
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+        <h2 className="text-3xl font-bold mb-6 text-[#4A90E2] text-center">Портфолио работ</h2>
+          <div className="relative rounded-3xl border border-[#4A90E2]/15 bg-white/80 p-6 shadow-lg backdrop-blur-sm dark:bg-gray-900/70">
+            <motion.div key={galleryIndex} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="grid gap-5 md:grid-cols-2">
+              {[displayPortfolio[galleryIndex % displayPortfolio.length], displayPortfolio[(galleryIndex + 1) % displayPortfolio.length]].map((item) => (
+                <div key={item.id} className="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-[#4A90E2]/10 dark:bg-gray-800">
+                  <img src={item.image} alt={item.title} className="h-72 w-full object-cover" />
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-800 dark:text-white">{item.title}</h3>
+                    {item.description && <p className="text-sm text-gray-500 mt-1">{item.description}</p>}
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-800 dark:text-white">{item.title}</h3>
-                  {item.description && <p className="text-sm text-gray-500 mt-1">{item.description}</p>}
-                  <p className="text-sm text-gray-500 mt-1">{item.date}</p>
-                </div>
-              </motion.div>
-            ))}
+              ))}
+            </motion.div>
+            {displayPortfolio.length > 2 ? (
+              <>
+                <button type="button" onClick={() => setGalleryIndex((galleryIndex - 1 + displayPortfolio.length) % displayPortfolio.length)} className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border-2 border-[#4A90E2] bg-white p-2 shadow">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button type="button" onClick={() => setGalleryIndex((galleryIndex + 1) % displayPortfolio.length)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border-2 border-[#4A90E2] bg-white p-2 shadow">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            ) : null}
           </div>
         </section>
       </div>

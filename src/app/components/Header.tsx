@@ -21,6 +21,13 @@ export function Header() {
     }
   };
 
+  const handleNavClick = (to: string) => (e: React.MouseEvent) => {
+    if (location.pathname === to) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleLogin = async (email: string, password: string) => {
     const res = await login(email, password);
     if (!res.ok) return res;
@@ -48,10 +55,10 @@ export function Header() {
             </Link>
 
             <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/services" className="text-lg hover:text-[#53C9CA] transition-colors font-medium">
+              <Link to="/services" onClick={handleNavClick('/services')} className="text-lg hover:text-[#53C9CA] transition-colors font-medium">
                 Услуги
               </Link>
-              <Link to="/courses" className="text-lg hover:text-[#53C9CA] transition-colors font-medium">
+              <Link to="/courses" onClick={handleNavClick('/courses')} className="text-lg hover:text-[#53C9CA] transition-colors font-medium">
                 Курсы
               </Link>
               {user ? (

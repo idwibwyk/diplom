@@ -8,6 +8,20 @@ import { ContactForm } from '@/app/components/ContactForm';
 type ServiceRow = { id: number; name: string; category: string; type: string; price: number; duration: string; description: string; image: string | null; breed: string | null; price_range: string | null };
 
 export function ServicesListPage() {
+  const shouldShowDuration = (service: ServiceRow) => {
+    const raw = String(service.duration ?? '').trim().toLowerCase();
+    if (!raw || raw === '0' || raw === '0 мин' || raw === '0 минут') return false;
+    if (service.name.toLowerCase().includes('агресс')) return false;
+    return true;
+  };
+  const formatPriceLabel = (value: string | null | undefined, fallback: number) => {
+    const v = String(value || '').trim();
+    if (!v) return `${fallback}₽`;
+    if (/[₽р]/i.test(v)) return v;
+    if (v.includes('-')) return `${v}₽`;
+    if (v.startsWith('от ')) return `${v}₽`;
+    return `${v}₽`;
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const navigate = useNavigate();
@@ -20,15 +34,27 @@ export function ServicesListPage() {
     { id: 'other', name: 'Другое', icon: Sparkles },
   ];
 
-  const filteredServices = services.filter((service) => {
-    const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
-    const matchesSearch =
-      searchTerm === '' ||
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (service.breed && service.breed.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  const serviceOrderScore = (service: ServiceRow) => {
+    const name = service.name.toLowerCase();
+    if (service.category === 'dogs' && name.startsWith('стрижка')) return 1;
+    if (service.category === 'cats') return 2;
+    if (name.includes('кролик')) return 3;
+    if (name.includes('когтей')) return 4;
+    if (name.includes('агресс')) return 5;
+    return 6;
+  };
+
+  const filteredServices = services
+    .filter((service) => {
+      const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
+      const matchesSearch =
+        searchTerm === '' ||
+        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (service.breed && service.breed.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => serviceOrderScore(a) - serviceOrderScore(b) || a.name.localeCompare(b.name, 'ru'));
 
   if (loadingList) {
     return (
@@ -69,12 +95,19 @@ export function ServicesListPage() {
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8">
               Выберите подходящую услугу для вашего питомца
             </p>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="flex flex-wrap justify-center gap-4">
               <Link
                 to="/book/service"
                 className="inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-[#4A90E2] to-[#9EC3EF] text-white rounded-2xl font-bold text-lg shadow-lg shadow-[#4A90E2]/30 hover:shadow-xl transition-shadow"
               >
                 Запись на услугу
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                to="/services/shelters"
+                className="inline-flex items-center gap-2 rounded-2xl border-2 border-[#4A90E2]/40 bg-white px-10 py-4 text-lg font-bold text-[#4A90E2] transition-colors hover:bg-[#4A90E2]/10 dark:bg-gray-800"
+              >
+                Для приютов
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </motion.div>
@@ -143,17 +176,19 @@ export function ServicesListPage() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 right-4 bg-[#4A90E2] text-white px-4 py-2 rounded-full font-bold">
-                    {service.price_range || `${service.price}₽`}
+                    {formatPriceLabel(service.price_range, service.price)}
                   </div>
                 </div>
 
                 <div className="p-6 flex-1 flex flex-col min-h-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">{service.duration}</span>
+                  {shouldShowDuration(service) ? (
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">{service.duration}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : <div className="mb-3" />}
 
                   <h3 className="text-2xl font-bold mb-3">{service.name}</h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-4 flex-1">

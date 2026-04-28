@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { api, setToken } from '@/app/api/client';
+import { api, hasToken, setToken } from '@/app/api/client';
 import React from 'react';
 export type UserRole = 'client' | 'groomer' | 'admin';
 
@@ -9,6 +9,9 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   phone?: string;
+  birth_date?: string | null;
+  city?: string | null;
+  photo?: string | null;
 }
 
 const STORAGE_USER = 'mars_groom_user';
@@ -22,19 +25,23 @@ type AuthContextValue = {
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
-function normalizeUser(u: { id: number; name: string; email: string; role: string; phone?: string }): AuthUser {
+function normalizeUser(u: { id: number; name: string; email: string; role: string; phone?: string; birth_date?: string | null; city?: string | null; photo?: string | null }): AuthUser {
   return {
     id: u.id,
     name: u.name,
     email: u.email,
     role: u.role as UserRole,
     phone: u.phone,
+    birth_date: u.birth_date ?? null,
+    city: u.city ?? null,
+    photo: u.photo ?? null,
   };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
     try {
+      if (!hasToken()) return null;
       const raw = localStorage.getItem(STORAGE_USER);
       if (raw) return JSON.parse(raw) as AuthUser;
     } catch {}
@@ -46,11 +53,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem(STORAGE_USER);
   }, [user]);
 
+  useEffect(() => {
+    if (!hasToken() && user) {
+      setUser(null);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const handler = () => setUser(null);
+    window.addEventListener('mars_auth_invalid', handler as EventListener);
+    return () => window.removeEventListener('mars_auth_invalid', handler as EventListener);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const res = await api.post<{ success: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string }; error?: string; hint?: string }>('/auth/login', { email, password });
+      const res = await api.post<{ success: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string; birth_date?: string | null; city?: string | null; photo?: string | null }; error?: string; hint?: string }>('/auth/login', { email, password });
       if ('error' in res) return { ok: false, error: res.error, hint: 'hint' in res ? res.hint : undefined };
-      const { token, user: u } = res.data as { success?: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string } };
+      const { token, user: u } = res.data as { success?: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string; birth_date?: string | null; city?: string | null; photo?: string | null } };
       if (!token || !u) return { ok: false, error: 'Нет данных в ответе' };
       setToken(token);
       const next = normalizeUser(u);
@@ -63,9 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (data: { name: string; email: string; password: string; phone?: string }) => {
     try {
-      const res = await api.post<{ success: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string }; error?: string; hint?: string }>('/auth/register', data);
+      const res = await api.post<{ success: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string; birth_date?: string | null; city?: string | null; photo?: string | null }; error?: string; hint?: string }>('/auth/register', data);
       if ('error' in res) return { ok: false, error: res.error, hint: 'hint' in res ? res.hint : undefined };
-      const { token, user: u } = res.data as { success?: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string } };
+      const { token, user: u } = res.data as { success?: boolean; token?: string; user?: { id: number; name: string; email: string; role: string; phone?: string; birth_date?: string | null; city?: string | null; photo?: string | null } };
       if (!token || !u) return { ok: false, error: 'Нет данных в ответе' };
       setToken(token);
       setUser(normalizeUser(u));

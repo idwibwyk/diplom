@@ -7,6 +7,7 @@
  * @param {Object} options - Дополнительные опции (excludeFields, allowGuestCreate, ownerField)
  */
 import db from '../db/knex.js';
+import { syncLoyaltyForUser } from '../services/loyalty.js';
 
 const createController = (tableName, rolesConfig = {}, options = {}) => {
   const {
@@ -108,6 +109,12 @@ const createController = (tableName, rolesConfig = {}, options = {}) => {
           message: 'Запись успешно создана',
         });
       } catch (error) {
+        if (error?.code === '23503' && String(error?.constraint || '').includes(`${tableName}_user_id_foreign`)) {
+          return res.status(401).json({
+            success: false,
+            error: 'Сессия пользователя недействительна. Выполните вход заново.',
+          });
+        }
         return res.status(500).json({ success: false, error: error.message });
       }
     },
@@ -125,6 +132,11 @@ const createController = (tableName, rolesConfig = {}, options = {}) => {
           } else {
             return res.status(403).json({ success: false, error: 'Нет прав на чтение' });
           }
+        }
+
+        // Лояльность: перед выдачей собственных данных пересчитываем «лапки»
+        if (tableName === 'loyalty_accounts' && user?.id && roles[user.role]?.readOwn) {
+          await syncLoyaltyForUser(user.id);
         }
 
         let query = db(tableName);

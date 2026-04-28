@@ -2,10 +2,12 @@
  * Сервер API MARS GROOM — Express + универсальный CRUD с проверкой прав по ролям.
  * Запуск: node server/index.js или npm run server
  */
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import routes from './routes/index.js';
+import { startRemindersWorker } from './services/reminders.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
@@ -37,4 +39,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`API: http://localhost:${PORT}/api`);
+  startRemindersWorker();
 });

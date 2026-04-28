@@ -21,6 +21,13 @@ export function ServicesHeader() {
     }
   };
 
+  const handleNavClick = (to: string) => (e: React.MouseEvent) => {
+    if (location.pathname === to) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleLogin = async (email: string, password: string) => {
     const res = await login(email, password);
     if (!res.ok) return res;
@@ -48,16 +55,16 @@ export function ServicesHeader() {
             </Link>
 
             <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/services" className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
+              <Link to="/services" onClick={handleNavClick('/services')} className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
                 Услуги
               </Link>
-              <Link to="/services/list" className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
+              <Link to="/services/list" onClick={handleNavClick('/services/list')} className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
                 Прайс-лист
               </Link>
-              <Link to="/services/blog" className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
+              <Link to="/services/blog" onClick={handleNavClick('/services/blog')} className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
                 Блог
               </Link>
-              <Link to="/services/shelters" className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
+              <Link to="/services/shelters" onClick={handleNavClick('/services/shelters')} className="text-lg hover:text-[#4A90E2] transition-colors font-medium">
                 Приюты
               </Link>
               {user ? (

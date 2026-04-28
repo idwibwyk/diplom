@@ -17,7 +17,6 @@ export function PriceCalculator() {
 
   const serviceOptions = [
     { id: 'nails', name: 'Стрижка когтей', price: 200 },
-    { id: 'aggression', name: 'Доплата за агрессию', price: 300 },
   ];
 
   const toggleService = (serviceId: string) => {

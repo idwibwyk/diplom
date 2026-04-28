@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Filter, Clock, DollarSign, CheckCircle, Users } from 'lucide-react';
+import { ArrowLeft, Filter, Clock, RussianRuble, CheckCircle, Users } from 'lucide-react';
+import { AppSelect } from '@/app/components/ui/AppSelect';
 
 const COLUMNS = [
   { id: 'today', title: 'Записи на сегодня', color: 'bg-blue-500/20 border-blue-500/50' },
@@ -96,7 +97,7 @@ export function AdminBoardPage() {
               Завершено: {completedCount}
             </span>
             <span className="flex items-center gap-1">
-              <DollarSign className="w-4 h-4" />
+              <RussianRuble className="w-4 h-4" />
               {revenue.toLocaleString()} ₽
             </span>
           </div>
@@ -107,25 +108,27 @@ export function AdminBoardPage() {
             <Filter className="w-5 h-5 text-[#4A90E2]" />
             <span className="font-medium">Фильтры:</span>
           </div>
-          <select
-            value={filterMaster}
-            onChange={(e) => setFilterMaster(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-[#4A90E2]"
-          >
-            <option value="all">Все мастера</option>
-            {mastersList.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-          <select
-            value={filterAnimal}
-            onChange={(e) => setFilterAnimal(e.target.value as 'all' | 'dog' | 'cat')}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-[#4A90E2]"
-          >
-            <option value="all">Все животные</option>
-            <option value="dog">Собаки</option>
-            <option value="cat">Кошки</option>
-          </select>
+          <div className="min-w-[220px]">
+            <AppSelect
+              value={filterMaster}
+              onChange={setFilterMaster}
+              options={[
+                { value: 'all', label: 'Все мастера' },
+                ...mastersList.map((m) => ({ value: m, label: m })),
+              ]}
+            />
+          </div>
+          <div className="min-w-[220px]">
+            <AppSelect
+              value={filterAnimal}
+              onChange={(v) => setFilterAnimal(v as 'all' | 'dog' | 'cat')}
+              options={[
+                { value: 'all', label: 'Все животные' },
+                { value: 'dog', label: 'Собаки' },
+                { value: 'cat', label: 'Кошки' },
+              ]}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

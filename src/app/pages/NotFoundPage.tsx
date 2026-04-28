@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Home, Scissors, BookOpen } from 'lucide-react';
+import { Home, Scissors, BookOpen, ArrowRight } from 'lucide-react';
 
 export function NotFoundPage() {
   return (
@@ -14,22 +14,22 @@ export function NotFoundPage() {
           to="/"
           className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#53C9CA] to-[#9ADFE0] hover:opacity-90 text-white rounded-xl font-bold transition-opacity"
         >
-          <Home className="w-5 h-5" />
           MARS GROOM — главная
+          <ArrowRight className="inline-block ml-2" />
         </Link>
         <Link
           to="/services"
           className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#4A90E2] to-[#9EC3EF] hover:opacity-90 text-white rounded-xl font-bold transition-opacity"
         >
-          <Scissors className="w-5 h-5" />
           MARS GROOM — услуги
+          <ArrowRight className="inline-block ml-2" />
         </Link>
         <Link
           to="/courses"
           className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#40AB40] to-[#89E689] hover:opacity-90 text-white rounded-xl font-bold transition-opacity"
         >
-          <BookOpen className="w-5 h-5" />
           MARS GROOM — курсы
+          <ArrowRight className="inline-block ml-2" />
         </Link>
       </div>
     </div>

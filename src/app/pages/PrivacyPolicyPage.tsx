@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'motion/react';
 import { Shield, Lock, Eye, FileText, Phone } from 'lucide-react';
 
@@ -117,7 +118,7 @@ export function PrivacyPolicyPage() {
                 <p className="text-gray-600 dark:text-gray-300 mt-4">
                   Email: mars-groom@yandex.ru<br />
                   Телефон: +7 (995) 020-50-13<br />
-                  Адрес: г. Владимир, ул. Нижняя Дуброва, д. 7
+                  Адрес: г. Владимир, просп. Ленина, 42
                 </p>
               </div>
             </div>

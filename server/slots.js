@@ -4,8 +4,8 @@
  */
 
 const SLOT_STEP_MINUTES = 30;
-const DEFAULT_START = '09:00';
-const DEFAULT_END = '18:00';
+const DEFAULT_START = '10:00';
+const DEFAULT_END = '22:00';
 
 /**
  * Генерирует все слоты на день (09:00–18:00, шаг 30 мин).
@@ -23,7 +23,7 @@ export function getAllSlotsForDay(dateStr) {
   const endMinutes = endH * 60 + endM;
 
   const slots = [];
-  for (let m = startMinutes; m < endMinutes; m += SLOT_STEP_MINUTES) {
+  for (let m = startMinutes; m <= endMinutes - SLOT_STEP_MINUTES; m += SLOT_STEP_MINUTES) {
     const h = Math.floor(m / 60);
     const min = m % 60;
     const time = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
@@ -46,23 +46,25 @@ export function getAllSlotsForDay(dateStr) {
  * @param {Array<{ start: Date, end: Date }>} blockedRanges - занятые интервалы
  * @returns {Array<{ time: string, datetime: string }>}
  */
-export function getAvailableSlotsForService(dateStr, durationMinutes, blockedRanges = []) {
+export function getSlotsWithAvailabilityForService(dateStr, durationMinutes, blockedRanges = []) {
   const duration = Math.max(SLOT_STEP_MINUTES, durationMinutes || 60);
   const allSlots = getAllSlotsForDay(dateStr);
   const [endH, endM] = DEFAULT_END.split(':').map(Number);
   const endDayMinutes = endH * 60 + endM;
 
   return allSlots
-    .filter((slot) => {
+    .map((slot) => {
       const slotStartMs = new Date(slot.datetime).getTime();
       const slotEndMs = slotStartMs + duration * 60 * 1000;
-      if (slot.minutesFromMidnight + duration > endDayMinutes) return false;
+      if (slot.minutesFromMidnight + duration > endDayMinutes) {
+        return { time: slot.time, datetime: slot.datetime, available: false };
+      }
       const overlaps = blockedRanges.some(
         (b) => slotStartMs < b.end.getTime() && slotEndMs > b.start.getTime()
       );
-      return !overlaps;
+      return { time: slot.time, datetime: slot.datetime, available: !overlaps };
     })
-    .map(({ time, datetime }) => ({ time, datetime }));
+    .map(({ time, datetime, available }) => ({ time, datetime, available }));
 }
 
 /**

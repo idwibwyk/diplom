@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Sparkles, BookOpen, Calendar, ArrowRight, User } from 'lucide-react';
+import { Sparkles, BookOpen, Calendar, ArrowRight, User, FileText } from 'lucide-react';
 
 interface Recommendation {
   id: string;
@@ -28,6 +28,8 @@ export function PersonalRecommendations({ recommendations }: PersonalRecommendat
         return BookOpen;
       case 'master':
         return User;
+      case 'article':
+        return FileText;
       default:
         return Sparkles;
     }
@@ -45,7 +47,7 @@ export function PersonalRecommendations({ recommendations }: PersonalRecommendat
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="p-4 bg-gradient-to-r from-[#53C9CA]/10 to-[#9ADFE0]/10 rounded-xl hover:from-[#53C9CA]/20 hover:to-[#9ADFE0]/20 transition-all"
+              className="h-full p-4 bg-gradient-to-r from-[#53C9CA]/10 to-[#9ADFE0]/10 rounded-xl hover:from-[#53C9CA]/20 hover:to-[#9ADFE0]/20 transition-all"
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#53C9CA] to-[#9ADFE0] rounded-xl flex items-center justify-center flex-shrink-0">
@@ -79,43 +81,93 @@ export function PersonalRecommendations({ recommendations }: PersonalRecommendat
   );
 }
 
-// Пример использования:
-export const getRecommendations = (viewedServices: string[], viewedCourses: string[]): Recommendation[] => {
+type RecommendationContext = {
+  userId: number;
+  petBreeds: string[];
+  hasFavoriteServices: boolean;
+  hasFavoriteCourses: boolean;
+  visitsCount: number;
+};
+
+const ARTICLE_POOL: Recommendation[] = [
+  {
+    id: 'article-1',
+    type: 'article',
+    title: 'Как сохранить результат стрижки дольше',
+    description: 'Практика домашнего ухода между визитами.',
+    link: '/services/blog',
+  },
+  {
+    id: 'article-2',
+    type: 'article',
+    title: 'Уход за шерстью после купания',
+    description: 'Что делать в первые 48 часов после процедуры.',
+    link: '/services/blog',
+  },
+  {
+    id: 'article-3',
+    type: 'article',
+    title: 'Подготовка питомца к визиту без стресса',
+    description: 'Чек-лист перед записью на груминг.',
+    link: '/services/blog',
+  },
+];
+
+export const getRecommendationsForUser = (ctx: RecommendationContext): Recommendation[] => {
   const recommendations: Recommendation[] = [];
 
-  // Рекомендации на основе просмотренных услуг
-  if (viewedServices.includes('shpitz')) {
-    recommendations.push({
-      id: 'rec-1',
-      type: 'article',
-      title: 'Вам также может быть интересна статья об уходе за шпицем',
-      description: 'Узнайте больше о специфике ухода за шпицами',
-      link: '/blog/shpitz-care',
-    });
-  }
+  const seed = Math.abs(ctx.userId || 1);
+  const articlePick = ARTICLE_POOL[seed % ARTICLE_POOL.length];
+  recommendations.push({ ...articlePick, id: `${articlePick.id}-${seed}` });
 
-  if (viewedServices.includes('poodle')) {
+  const hasSpitz = ctx.petBreeds.some((b) => b.toLowerCase().includes('шпиц'));
+  const hasPoodle = ctx.petBreeds.some((b) => b.toLowerCase().includes('пудел'));
+
+  if (hasSpitz) {
     recommendations.push({
-      id: 'rec-2',
+      id: `spitz-${seed}`,
+      type: 'service',
+      title: 'Для шпица: поддержка объема и антиколтуны',
+      description: 'Подберите интервал визитов и домашний уход под густой подшерсток.',
+      link: '/services/list',
+    });
+  } else if (hasPoodle) {
+    recommendations.push({
+      id: `poodle-${seed}`,
       type: 'master',
-      title: 'Смотрите, у Ольги завтра есть свободное окно для стрижки пуделей',
-      description: 'Мастер Ольга Петрова специализируется на пуделях',
-      link: '/services',
-      masterName: 'Ольга Петрова',
-      availableTime: 'Завтра в 14:00',
+      title: 'Для пуделя: аккуратная модельная линия',
+      description: 'Рекомендуем запись к мастеру с опытом сложных силуэтов.',
+      link: '/services/list',
+      masterName: 'Мастер по породным стрижкам',
+      availableTime: 'Ближайшее окно на неделе',
     });
-  }
-
-  // Рекомендации на основе просмотренных курсов
-  if (viewedCourses.includes('beginner')) {
+  } else {
     recommendations.push({
-      id: 'rec-3',
-      type: 'course',
-      title: 'Рекомендуем курс "Профессиональный груминг"',
-      description: 'Продолжите обучение с углубленной программой',
-      link: '/courses/2',
+      id: `general-care-${seed}`,
+      type: 'service',
+      title: 'Поддерживающий уход между основными визитами',
+      description: 'Когти, уши и экспресс-уход помогают сохранить комфорт питомца.',
+      link: '/services/list',
     });
   }
 
-  return recommendations;
+  if (!ctx.hasFavoriteCourses || ctx.visitsCount < 2) {
+    recommendations.push({
+      id: `course-${seed}`,
+      type: 'course',
+      title: 'Подборка курсов для владельцев',
+      description: 'Короткие программы по базовому уходу в домашних условиях.',
+      link: '/courses/list',
+    });
+  } else {
+    recommendations.push({
+      id: `next-step-${seed}`,
+      type: 'course',
+      title: 'Следующий шаг в обучении',
+      description: 'Выберите курс продвинутого уровня с практикой.',
+      link: '/courses/list',
+    });
+  }
+
+  return recommendations.slice(0, 3);
 };

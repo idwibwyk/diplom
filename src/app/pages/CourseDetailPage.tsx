@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import {
   Clock,
-  DollarSign,
+  RussianRuble,
   Users,
   Award,
   PlayCircle,
@@ -157,7 +157,7 @@ export function CourseDetailPage() {
                 <span className="text-xl">{course.duration}</span>
               </div>
               <div className="flex items-center gap-2">
-                <DollarSign className="w-6 h-6" />
+                <RussianRuble className="w-6 h-6" />
                 <span className="text-xl">{course.price.toLocaleString()}₽</span>
               </div>
               <div className="flex items-center gap-2">

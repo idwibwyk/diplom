@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Inbox, Calendar, DollarSign, Users, TrendingUp, FileBarChart, Scissors, LayoutList, BookOpen, Send } from 'lucide-react';
+import { Inbox, Calendar, RussianRuble, Users, TrendingUp, FileBarChart, Scissors, LayoutList, BookOpen, Send } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -54,7 +54,7 @@ export function AdminDashboardMain() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border-2 border-[#4A90E2]/20 hover:shadow-xl transition-shadow">
-          <DollarSign className="w-10 h-10 text-[#4A90E2] mb-2" />
+          <RussianRuble className="w-10 h-10 text-[#4A90E2] mb-2" />
           <p className="text-2xl font-bold text-[#4A90E2]">{totalWeek.toLocaleString('ru-RU')} ₽</p>
           <p className="text-sm text-gray-500">Выручка за неделю</p>
         </motion.div>

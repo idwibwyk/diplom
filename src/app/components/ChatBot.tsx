@@ -34,7 +34,7 @@ export function ChatBot() {
 
   // Определяем цвет в зависимости от страницы
   const getChatColor = () => {
-    if (location.pathname.startsWith('/services')) {
+    if (location.pathname.startsWith('/services') || location.pathname.startsWith('/book/service')) {
       return 'from-[#4A90E2] to-[#9EC3EF]'; // Голубой для услуг
     } else if (location.pathname.startsWith('/courses') || location.pathname.startsWith('/courses/library')) {
       return 'from-[#40AB40] to-[#89E689]'; // Зеленый для курсов

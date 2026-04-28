@@ -18,7 +18,6 @@ import { CourseTestPage } from '@/app/pages/CourseTestPage';
 import { ServiceDetailPage } from '@/app/pages/ServiceDetailPage';
 import { ClientDashboard } from '@/app/pages/ClientDashboard';
 import { ClientDashboardCourses } from '@/app/pages/ClientDashboardCourses';
-import { BlogPage } from '@/app/pages/BlogPage';
 import { PetHealthCardPage } from '@/app/pages/PetHealthCardPage';
 import { KnowledgeLibraryPage } from '@/app/pages/KnowledgeLibraryPage';
 import { CourseDetailPage } from '@/app/pages/CourseDetailPage';
@@ -58,6 +57,8 @@ import { AdminClientsPage } from '@/app/pages/AdminClientsPage';
 import { AdminWarehousePage } from '@/app/pages/AdminWarehousePage';
 import { AdminFinancePage } from '@/app/pages/AdminFinancePage';
 import { AdminStatsPage } from '@/app/pages/AdminStatsPage';
+import { AdminModerationPage } from '@/app/pages/AdminModerationPage';
+import { AdminServicesBlogEditorPage } from '@/app/pages/AdminServicesBlogEditorPage';
 import { DashboardGroomerLayout } from '@/app/layouts/DashboardGroomerLayout';
 import { DashboardAdminLayout } from '@/app/layouts/DashboardAdminLayout';
 import { ClientDashboardLayout } from '@/app/layouts/ClientDashboardLayout';
@@ -67,6 +68,7 @@ import { DashboardSchedulePage } from '@/app/pages/DashboardSchedulePage';
 import { DashboardNotificationsPage } from '@/app/pages/DashboardNotificationsPage';
 import { DashboardReviewsPage } from '@/app/pages/DashboardReviewsPage';
 import { DashboardPetsPage } from '@/app/pages/DashboardPetsPage';
+import { DashboardSettingsPage } from '@/app/pages/DashboardSettingsPage';
 import { NotFoundPage } from '@/app/pages/NotFoundPage';
 import { FavoritesProvider } from '@/app/context/FavoritesContext';
 import { AuthProvider } from '@/app/context/AuthContext';
@@ -135,10 +137,9 @@ function AppContent() {
               <Route path="notifications" element={<DashboardNotificationsPage />} />
               <Route path="reviews" element={<DashboardReviewsPage />} />
               <Route path="pets" element={<DashboardPetsPage />} />
+              <Route path="settings" element={<DashboardSettingsPage />} />
             </Route>
             <Route path="/dashboard-courses" element={<ClientDashboardCourses />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/blog/:id" element={<BlogArticlePage />} />
             <Route path="/licenses" element={<LicensesPage />} />
             <Route path="/certificates" element={<CertificatesPage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
@@ -169,7 +170,9 @@ function AppContent() {
               <Route path="warehouse" element={<AdminWarehousePage />} />
               <Route path="finance" element={<AdminFinancePage />} />
               <Route path="services-add" element={<AdminServicesAddPage />} />
+              <Route path="services-blog" element={<AdminServicesBlogEditorPage />} />
               <Route path="courses-add" element={<AdminCoursesAddPage />} />
+              <Route path="moderation" element={<AdminModerationPage />} />
               <Route path="stats" element={<AdminStatsPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />

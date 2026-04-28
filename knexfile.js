@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 /** @type { import("knex").Knex.Config } */
 export default {
   client: 'pg',

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useFavoritesContext } from '@/app/context/FavoritesContext';
 import { FavoriteButton } from '@/app/components/FavoriteButton';
-import { courses as allCourses } from '@/app/data/mockData';
+import { useEntity } from '@/app/hooks';
 
 const SIDEBAR_LINKS = [
   { to: '/dashboard-courses', label: 'Мои курсы', icon: BookOpen },
@@ -28,15 +28,28 @@ const SIDEBAR_LINKS = [
   { to: '/licenses', label: 'Сведения об организации', icon: FileText },
 ];
 
-const MOCK_MY_COURSES = [
-  { id: 1, name: 'Основы груминга собак', progress: 40, nextLesson: 'Урок 4' },
-  { id: 2, name: 'Креативный груминг', progress: 0, nextLesson: 'Старт 1 марта' },
-];
+type CourseRow = { id: number; name: string };
+type CourseBookingRow = { id: number; course_id: number; course_schedule_id?: number | null; created_at: string; status?: string | null };
+type CourseScheduleRow = { id: number; start_date: string; start_time?: string | null };
 
 export function ClientDashboardCourses() {
   const [activeTab, setActiveTab] = useState<'courses' | 'progress'>('courses');
   const { favorites } = useFavoritesContext();
+  const { list: allCourses } = useEntity<CourseRow>('courses', { fetchListOnMount: true, listParams: { limit: 200 } });
+  const { list: myCourseBookings } = useEntity<CourseBookingRow>('course_bookings', { fetchListOnMount: true, listParams: { limit: 200 } });
+  const { list: schedules } = useEntity<CourseScheduleRow>('course_schedules', { fetchListOnMount: true, listParams: { limit: 200 } });
   const favCourses = allCourses.filter((c) => favorites.courses.includes(c.id));
+  const myCourses = myCourseBookings.map((b) => {
+    const c = allCourses.find((x) => x.id === b.course_id);
+    const s = schedules.find((x) => x.id === b.course_schedule_id);
+    return {
+      id: b.id,
+      courseId: b.course_id,
+      name: c?.name || 'Курс',
+      progress: b.status === 'completed' ? 100 : b.status === 'in_progress' ? 50 : 0,
+      nextLesson: s ? `${new Date(s.start_date).toLocaleDateString('ru-RU')} ${s.start_time ? String(s.start_time).slice(0, 5) : ''}` : 'Дата уточняется',
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#009B00]/5 to-white dark:from-gray-900 dark:to-gray-800">
@@ -107,7 +120,7 @@ export function ClientDashboardCourses() {
 
               {activeTab === 'courses' && (
                 <div className="space-y-4">
-                  {MOCK_MY_COURSES.map((c) => (
+                  {myCourses.map((c) => (
                     <motion.div
                       key={c.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -130,7 +143,7 @@ export function ClientDashboardCourses() {
                           </div>
                           <span className="text-sm font-medium">{c.progress}%</span>
                           <Link
-                            to={`/courses/${c.id}`}
+                            to={`/courses/${c.courseId}`}
                             className="px-4 py-2 bg-[#40AB40] hover:bg-[#89E689] text-white rounded-lg text-sm font-medium transition-colors"
                           >
                             Продолжить
@@ -145,7 +158,7 @@ export function ClientDashboardCourses() {
               {activeTab === 'progress' && (
                 <div className="text-center py-12 text-gray-500">
                   <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Статистика по прохождению курсов (мок)</p>
+                  <p>Статистика по прохождению курсов формируется из ваших записей</p>
                 </div>
               )}
             </section>

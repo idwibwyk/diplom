@@ -3,7 +3,7 @@
  * Возвращает: list, item, create, update, remove, refetch и все состояния загрузки/ошибок.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { api } from '@/app/api/client';
 import type { ApiListResponse, ApiItemResponse, ApiErrorResponse } from '@/app/api/types';
 
@@ -103,6 +103,7 @@ export function useEntity<T = Record<string, unknown>>(
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const basePath = `/${entityName}`;
+  const listParamsKey = useMemo(() => JSON.stringify(listParams ?? {}), [listParams]);
 
   const refetchList = useCallback(
     async (params?: Record<string, string | number | undefined>) => {
@@ -213,7 +214,7 @@ export function useEntity<T = Record<string, unknown>>(
 
   useEffect(() => {
     if (enabled && fetchListOnMount) refetchList();
-  }, [entityName, enabled, fetchListOnMount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [entityName, enabled, fetchListOnMount, listParamsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (enabled && fetchItemOnMount && id != null) refetchItem(id);

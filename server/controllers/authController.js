@@ -58,11 +58,7 @@ export async function login(req, res) {
       });
     }
 
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
 
     return res.json({
       success: true,
@@ -100,11 +96,7 @@ export async function register(req, res) {
     const id = row?.id ?? row;
     const user = await db('users').where({ id }).first();
 
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
 
     return res.status(201).json({
       success: true,

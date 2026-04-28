@@ -9,6 +9,7 @@ export function ContactForm() {
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const yandexApiKey = (import.meta as any).env?.VITE_YMAPS_API_KEY as string | undefined;
+  const [useIframeMap, setUseIframeMap] = useState(false);
 
   // Определяем цвет в зависимости от страницы
   const getColorScheme = () => {
@@ -49,7 +50,9 @@ export function ContactForm() {
     // Яндекс карта
     if (!mapRef.current) return;
     if (!yandexApiKey) {
-      setMapError('Карта временно недоступна (не задан ключ API Яндекс.Карт)');
+      // Fallback: iframe-встраивание работает без API key
+      setUseIframeMap(true);
+      setMapError(null);
       return;
     }
 
@@ -61,16 +64,18 @@ export function ContactForm() {
           // На всякий случай чистим контейнер, чтобы не было повторной инициализации
           mapRef.current!.innerHTML = '';
           const map = new ymaps.Map(mapRef.current!, {
-            center: [56.106309, 40.366696], // Владимир, ул. Нижняя Дуброва, д. 7
+            center: [56.119164, 40.357110], // Владимир, просп. Ленина, 42
             zoom: 15,
           });
-          const placemark = new ymaps.Placemark([56.106309, 40.366696], {
-            balloonContent: 'MARS GROOM<br>г. Владимир, ул. Нижняя Дуброва, д. 7',
+          const placemark = new ymaps.Placemark([56.119164, 40.357110], {
+            balloonContent: 'MARS GROOM<br>г. Владимир, просп. Ленина, 42',
           });
           map.geoObjects.add(placemark);
           setMapError(null);
+          setUseIframeMap(false);
         } catch {
           setMapError('Не удалось отобразить карту');
+          setUseIframeMap(true);
         }
       });
     };
@@ -98,7 +103,10 @@ export function ContactForm() {
     script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(yandexApiKey)}&lang=ru_RU`;
     script.async = true;
     script.onload = initMap;
-    script.onerror = () => setMapError('Не удалось загрузить API Яндекс.Карт');
+    script.onerror = () => {
+      setMapError('Не удалось загрузить API Яндекс.Карт');
+      setUseIframeMap(true);
+    };
     document.head.appendChild(script);
   }, []);
 
@@ -144,14 +152,23 @@ export function ContactForm() {
               <div>
                 <h3 className="text-xl font-bold mb-2">Адрес</h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  г. Владимир, ул. Нижняя Дуброва, д. 7
+                  г. Владимир, просп. Ленина, 42
                 </p>
               </div>
             </div>
 
             {/* Яндекс карта */}
             <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg relative">
-              <div ref={mapRef} className="w-full h-full" />
+              {useIframeMap ? (
+                <iframe
+                  title="Карта салона"
+                  className="w-full h-full"
+                  src="https://yandex.ru/map-widget/v1/?ll=40.357110%2C56.119164&z=16&pt=40.357110%2C56.119164%2Cpm2rdm"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              ) : (
+                <div ref={mapRef} className="w-full h-full" />
+              )}
               {mapError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 p-4 text-center">
                   <p className="text-sm text-gray-700 dark:text-gray-200">{mapError}</p>

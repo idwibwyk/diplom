@@ -13,6 +13,8 @@ import {
   Scissors,
   BookOpen,
   TrendingUp,
+  FilePenLine,
+  ShieldCheck,
 } from 'lucide-react';
 import React from 'react';
 const SIDEBAR = [
@@ -27,7 +29,9 @@ const SIDEBAR = [
   { to: '/dashboard-admin/warehouse', label: 'Склад', icon: Package },
   { to: '/dashboard-admin/finance', label: 'Финансы', icon: Wallet },
   { to: '/dashboard-admin/services-add', label: 'Каталог услуг', icon: Scissors },
+  { to: '/dashboard-admin/services-blog', label: 'Блог услуг (редактор)', icon: FilePenLine },
   { to: '/dashboard-admin/courses-add', label: 'Каталог курсов', icon: BookOpen },
+  { to: '/dashboard-admin/moderation', label: 'Модерация', icon: ShieldCheck },
   { to: '/dashboard-admin/stats', label: 'Статистика и аналитика', icon: TrendingUp },
 ];
 
